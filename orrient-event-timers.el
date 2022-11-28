@@ -11,57 +11,130 @@
 
 ;;; Code:
 (require 'cl-lib)
+(require 'generator)
 
-(cl-defstruct orrient-gw2-event
-  name       ; Name of the event.
-  offset     ; Minutes. Offset from UTC when the first event of the day occurs.
-  length     ; Minutes. How long the event lasts.
-  frequency) ; Minutes. How often the event occurs.
+(cl-defstruct orrient-event
+  name
+  offset
+  length
+  frequency)
 
-(cl-defstruct orrient-gw2-meta
+(cl-defstruct orrient-meta
   name
   events)
 
-(defconst orrient-schedule
-  `(,(make-orrient-gw2-meta
-      :name "day and night"
-      :events `(,(make-orrient-gw2-event :name "dawn"  :offset  25 :length  5 :frequency 120)
-                ,(make-orrient-gw2-event :name "day"   :offset  30 :length 70 :frequency 120)
-                ,(make-orrient-gw2-event :name "dusk"  :offset 100 :length  5 :frequency 120)
-                ,(make-orrient-gw2-event :name "night" :offset 105 :length 40 :frequency 120)))
-
-    ,(make-orrient-gw2-meta
-      :name "other meta"
-      :events `(,(make-orrient-gw2-event :name "dawn 2"  :offset  25 :length  5 :frequency 120)
-                ,(make-orrient-gw2-event :name "day 2"   :offset  30 :length 70 :frequency 120)
-                ,(make-orrient-gw2-event :name "dusk 2"  :offset 100 :length  5 :frequency 120)
-                ,(make-orrient-gw2-event :name "night 2" :offset 105 :length 40 :frequency 120))))
+(defvar orrient-schedule
+  `(,(make-orrient-meta :name "Day and Night"
+      :events `(,(make-orrient-event :name "Dawn"  :offset  25 :frequency 120 :length  5)
+                ,(make-orrient-event :name "Day"   :offset  30 :frequency 120 :length 70)
+                ,(make-orrient-event :name "Dusk"  :offset 100 :frequency 120 :length  5)
+                ,(make-orrient-event :name "Night" :offset 105 :frequency 120 :length 40)))
+    ,(make-orrient-meta :name "World Bosses"
+      :events `(,(make-orrient-event :name "Admiral Taidha Covington" :offset   0 :frequency 180 :length 15)
+                ,(make-orrient-event :name "Svanir Shaman Chief"      :offset  15 :frequency 120 :length 15)
+                ,(make-orrient-event :name "Megadestroyer"            :offset  30 :frequency 180 :length 15)
+                ,(make-orrient-event :name "Fire Elemental"           :offset  45 :frequency 120 :length 15)
+                ,(make-orrient-event :name "The Shatterer"            :offset  60 :frequency 180 :length 15)
+                ,(make-orrient-event :name "Great Jungle Wurm"        :offset  75 :frequency 120 :length 15)
+                ,(make-orrient-event :name "Modniir Ulgoth"           :offset  90 :frequency 180 :length 15)
+                ,(make-orrient-event :name "Shadow Behemoth"          :offset 105 :frequency 120 :length 15)
+                ,(make-orrient-event :name "Golem Mark II"            :offset 120 :frequency 180 :length 15)
+                ,(make-orrient-event :name "Claw of Jormag"           :offset 150 :frequency 180 :length 15)))
+    ,(make-orrient-meta :name "Hard World Bosses"
+      :events `(,(make-orrient-event :name "Tequatl the Sunless" :offset    0 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Triple Trouble"      :offset   60 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Karka Queen"         :offset  120 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset  180 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Triple Trouble"      :offset  240 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Karka Queen"         :offset  360 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset  420 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Triple Trouble"      :offset  480 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Karka Queen"         :offset  630 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset  690 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Triple Trouble"      :offset  750 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Karka Queen"         :offset  900 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset  960 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Triple Trouble"      :offset 1020 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Karka Queen"         :offset 1080 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset 1140 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Triple Trouble"      :offset 1200 :frequency 1440 :length 30)
+                ,(make-orrient-event :name "Karka Queen"         :offset 1380 :frequency 1440 :length 30)))
+    ,(make-orrient-meta :name "Ley-Line Anomaly"
+      :events `(,(make-orrient-event :name "Timberline Falls" :offset  20 :frequency 360 :length 20)
+                ,(make-orrient-event :name "Iron Marches"     :offset 140 :frequency 360 :length 20)
+                ,(make-orrient-event :name "Gendarran Fields" :offset 260 :frequency 360 :length 20)))
+    ,(make-orrient-meta :name "PVP Tournaments"
+      :events `(,(make-orrient-event :name "Balthazar's Brawl"  :offset   0 :frequency 720 :length 60)
+                ,(make-orrient-event :name "Grenth's Game"      :offset 180 :frequency 720 :length 60)
+                ,(make-orrient-event :name "Melandru's Matchup" :offset 360 :frequency 720 :length 60)
+                ,(make-orrient-event :name "Lyssa's Legions"    :offset 540 :frequency 720 :length 60)))
+    ,(make-orrient-meta :name "Eye of the North"
+      :events `(,(make-orrient-event :name "Twisted Marionette (Public)"     :offset  0 :frequency 120 :length 20)
+                ,(make-orrient-event :name "Battle For Lion's Arch (Public)" :offset 30 :frequency 120 :length 15)
+                ,(make-orrient-event :name "Tower of Nightmares (Public)"    :offset 90 :frequency 120 :length 15)))
+    ,(make-orrient-meta :name "Dry Top"
+      :events `(,(make-orrient-event :name "Crash Site" :offset  0 :frequency 60 :length 40)
+                ,(make-orrient-event :name "Sandstore"  :offset 40 :frequency 60 :length 20)))
+    ,(make-orrient-meta :name "Verdant Brink"
+      :events `(,(make-orrient-event :name "Night: Night and the Enemy"  :offset 105 :frequency 120 :length 25)
+                ,(make-orrient-event :name "Night Bosses"                :offset  10 :frequency 120 :length 20)
+                ,(make-orrient-event :name "Day: Securing Verdant Brink" :offset  30 :frequency 120 :length 75)))
+    ,(make-orrient-meta :name "Auric Basin"
+      :events `(,(make-orrient-event :name "Challenges" :offset 45 :frequency 120 :length 15)
+                ,(make-orrient-event :name "Octovine"   :offset 60 :frequency 120 :length 20)
+                ,(make-orrient-event :name "Reset"      :offset 80 :frequency 120 :length 10)
+                ,(make-orrient-event :name "Pylons"     :offset 90 :frequency 120 :length 75))))
   "list of meta events.")
 
 (defvar orrient-et-buffer "*orrient-event-timers*")
 
 (defun orrient--current-time ()
   "Return current time in minutes from UTC 0."
-  0)
+  (let ((time (decode-time nil t nil)))
+    (+ (* 60 (decoded-time-hour time))
+       (decoded-time-minute time))))
 
 (defun orrient--event-next-occurance (event current-time)
-  (let* ((offset (orrient-gw2-event-offset event))
-         (frequency (orrient-gw2-event-frequency event))
+  (let* ((offset (orrient-event-offset event))
+         (frequency (orrient-event-frequency event))
          (index (/ current-time frequency))
+         (next-start (+ offset (* index frequency)))
          (time-until (- current-time next-start)))
-    (+ offset (* (if (>= time-until 0)
-                     (1+ index)
-                   index) frequency))))
+    (when (>= time-until 0)
+      (setq next-start (+ offset (* (1+ index) frequency))))
+    next-start))
 
-(defun orrient--meta-next-event (meta time))
+(defun orrient--meta-next-event (meta current-time)
+  (let* ((events (orrient-meta-events meta)))
+    (mapcar (lambda (event)
+              (orrient--event-next-occurance event current-time))
+            events)))
 
 (defun orrient--draw-meta (meta)
-  (insert (format "%s: \n" (orrient-gw2-meta-name meta)))
-  (dolist (event (orrient-gw2-meta-events meta))
-    (orrient--draw-event event)))
+  (insert (format "%s " (orrient-meta-name meta)))
+  (dolist (event (orrient-meta-events meta))
+    (orrient--draw-event event))
+  (insert "\n\n"))
+
+(iter-defun orrient--meta-iter (meta time)
+  "Yields a cons of a orrient-event to it's next start time."
+  (let ((events (orrient-meta-events meta)))
+    (while t
+      (let* ((upcoming-events (seq-map
+                              (lambda (event)
+                                (cons event (orrient--event-next-occurance event time)))
+                              events))
+            (next-event-instance (-reduce (lambda (upcoming-event-a upcoming-event-b)
+                                            (if (< (cdr upcoming-event-a)
+                                                   (cdr upcoming-event-b)) 
+                                                upcoming-event-a
+                                              upcoming-event-b))
+                                          upcoming-events)))
+        (iter-yield next-event-instance)
+        (setq time (cdr next-event-instance))))))
 
 (defun orrient--draw-event (event)
-  (insert (format "- %s\n" (orrient-gw2-event-name event))))
+  (insert (format "| %s " (orrient-event-name event))))
 
 (defun orrient--et-render-buffer ()
   (interactive)
