@@ -110,12 +110,6 @@
               (orrient--event-next-occurance event current-time))
             events)))
 
-(defun orrient--draw-meta (meta)
-  (insert (format "%s " (orrient-meta-name meta)))
-  (dolist (event (orrient-meta-events meta))
-    (orrient--draw-event event))
-  (insert "\n\n"))
-
 (iter-defun orrient--meta-iter (meta time)
   "Yields a cons of a orrient-event to it's next start time."
   (let ((events (orrient-meta-events meta)))
@@ -132,6 +126,13 @@
                                           upcoming-events)))
         (iter-yield next-event-instance)
         (setq time (cdr next-event-instance))))))
+
+(defun orrient--draw-meta (meta)
+  (insert (format "%s | " (orrient-meta-name meta)))
+  (let ((iter (orrient--meta-iter meta (orrient--current-time))))
+    (cl-loop for i upto 5
+             do (insert (format "%s, " (orrient-event-name (car (iter-next iter)))))))
+  (insert "\n\n"))
 
 (defun orrient--draw-event (event)
   (insert (format "| %s " (orrient-event-name event))))
