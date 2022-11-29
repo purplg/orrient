@@ -129,6 +129,19 @@
         (iter-yield next-event-instance)
         (setq time (cdr next-event-instance))))))
 
+(defun orrient--timers-heading-length ()
+  (let ((name-lengths (mapcar (lambda (meta)
+                                (cons meta (length (orrient-timers-meta-name meta))))
+                              orrient-timers-schedule)))
+    (cdr (seq-reduce (lambda (left right)
+                       (if (and left
+                                (> (cdr left)
+                                   (cdr right)))
+                           left
+                         right))
+                     name-lengths
+                     nil))))
+
 (defun orrient--timers-draw-meta (meta)
   (insert (format "%s | " (orrient-timers-meta-name meta)))
   (let ((iter (orrient--timers-meta-iter meta (orrient--timers-current-time))))
