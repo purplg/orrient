@@ -118,12 +118,14 @@
                               (lambda (event)
                                 (cons event (orrient--timers-event-next-occurance event time)))
                               events))
-            (next-event-instance (-reduce (lambda (upcoming-event-a upcoming-event-b)
-                                            (if (< (cdr upcoming-event-a)
-                                                   (cdr upcoming-event-b)) 
-                                                upcoming-event-a
-                                              upcoming-event-b))
-                                          upcoming-events)))
+             (next-event-instance (seq-reduce (lambda (upcoming-event-a upcoming-event-b)
+                                                (if (and upcoming-event-a
+                                                         (< (cdr upcoming-event-a)
+                                                            (cdr upcoming-event-b)))
+                                                    upcoming-event-a
+                                                  upcoming-event-b))
+                                             upcoming-events
+                                             nil)))
         (iter-yield next-event-instance)
         (setq time (cdr next-event-instance))))))
 
