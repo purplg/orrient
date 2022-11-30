@@ -91,7 +91,7 @@
       :events `(,(make-orrient-timers-event :name "TODO" :offset  0 :frequency 120 :length 20)))
     ,(make-orrient-timers-meta :name "Dry Top" :category 'living-world-2
       :events `(,(make-orrient-timers-event :name "Crash Site" :offset  0 :frequency 60 :length 40)
-                ,(make-orrient-timers-event :name "Sandstore"  :offset 40 :frequency 60 :length 20)))
+                ,(make-orrient-timers-event :name "Sandstorm"  :offset 40 :frequency 60 :length 20)))
     ,(make-orrient-timers-meta :name "Verdant Brink" :category 'heart-of-thorns
       :events `(,(make-orrient-timers-event :name "Night: Night and the Enemy"  :offset 105 :frequency 120 :length 25)
                 ,(make-orrient-timers-event :name "Night Bosses"                :offset  10 :frequency 120 :length 20)
