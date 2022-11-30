@@ -143,6 +143,11 @@
         (setq time (cdr next-event-instance))))))
 
 
+;; Widgets
+(define-widget 'orrient-timers-event 'push-button
+  "")
+
+
 ;; Rendering
 (defun orrient--timers-heading-length ()
   (let ((name-lengths (mapcar (lambda (meta)
@@ -165,7 +170,8 @@
   (insert "\n\n"))
 
 (defun orrient--timers-draw-event (event)
-  (insert (format "%s, " (orrient-timers-event-name event))))
+  (widget-create 'orrient-timers-event
+                 :tag (orrient-timers-event-name event)))
 
 (defun orrient--timers-render-buffer ()
   (interactive)
