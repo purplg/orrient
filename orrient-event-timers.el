@@ -15,6 +15,15 @@
 
 (defvar orrient-timers-buffer "*orrient-event-timers*")
 
+(defvar orrient-timers-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "g r") 'orrient--timers-render-buffer)
+    (define-key map (kbd "RET") 'widget-button-press)
+    (define-key map [tab] 'widget-forward)
+    (define-key map [backtab] 'widget-backward)
+    map)
+  "Keymap for `orrient-timers-mode'.")
+
 
 ;; Data
 (cl-defstruct orrient-timers-event
