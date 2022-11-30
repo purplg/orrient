@@ -152,11 +152,11 @@
   (insert (format "%s | " (orrient-timers-meta-name meta)))
   (let ((iter (orrient--timers-meta-iter meta (orrient--timers-current-time))))
     (cl-loop for i upto 5
-             do (insert (format "%s, " (orrient-timers-event-name (car (iter-next iter)))))))
+             do (orrient--timers-draw-event (car (iter-next iter)))))
   (insert "\n\n"))
 
 (defun orrient--timers-draw-event (event)
-  (insert (format "| %s " (orrient-event-name event))))
+  (insert (format "%s, " (orrient-timers-event-name event))))
 
 (defun orrient--timers-render-buffer ()
   (interactive)
