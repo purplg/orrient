@@ -105,6 +105,8 @@
 
 (defvar orrient--timers-heading-length nil)
 
+(defvar orrient--timers-event-length 20)
+
 
 ;; Faces
 (defface orrient-timers-meta
@@ -223,7 +225,7 @@
 (define-widget 'orrient-timers-event 'push-button
   "")
 
-(define-widget 'orrient-timers-meta 'item
+(define-widget 'orrient-timers-meta 'group
   "")
 
 (defun orrient-timers-meta-widget-create (widget)
@@ -232,7 +234,17 @@
     (widget-put widget :tag (propertize (format (format "%%%ss " (orrient--timers-heading-length))
                                                 (orrient-timers-meta-name meta))
                                         'face (orrient--timers-get-category-face (orrient-timers-meta-category meta))))
-    (widget-put widget :format "%t"))
+    (widget-put widget :format "%t %v"))
+
+  (widget-default-create widget))
+
+(defun orrient-timers-event-widget-create (widget)
+  (let ((event (widget-get widget :event)))
+    (widget-put widget :tag (string-limit (format
+                                           (format "%%-%ss " orrient--timers-event-length)
+                                           (orrient-timers-event-name event))
+                                          orrient--timers-event-length))
+    (widget-put widget :format "%[%t%]"))
   (widget-default-create widget))
 
 
@@ -253,19 +265,19 @@
                                nil))))))
 
 (defun orrient--timers-draw-meta (meta)
-  (widget-create 'orrient-timers-meta
-                 :meta meta
-                 :create #'orrient-timers-meta-widget-create)
-  (let ((iter (orrient--timers-meta-iter meta (orrient--timers-current-time))))
-    (cl-loop repeat 5 do
-             (insert " ")
-             (orrient--timers-draw-event (car (iter-next iter)))))
+  (widget-create
+   (append `(orrient-timers-meta
+             :meta ,meta
+             :create orrient-timers-meta-widget-create)
+           (orrient--timers-upcoming-events-widgets meta)))
   (insert "\n"))
 
-(defun orrient--timers-draw-event (event)
-  (widget-create 'orrient-timers-event
-                 :tag (orrient-timers-event-name event)
-                 :format "%t"))
+(defun orrient--timers-upcoming-events-widgets (meta)
+  (let ((iter (orrient--timers-meta-iter meta (orrient--timers-current-time))))
+    (cl-loop repeat 5 collect
+             `(orrient-timers-event
+               :create orrient-timers-event-widget-create
+               :event ,(car (iter-next iter))))))
 
 (defun orrient--timers-render-buffer ()
   (interactive)
