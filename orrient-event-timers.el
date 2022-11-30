@@ -13,6 +13,10 @@
 (require 'cl-lib)
 (require 'generator)
 
+(defvar orrient-timers-buffer "*orrient-event-timers*")
+
+
+;; Data
 (cl-defstruct orrient-timers-event
   name
   offset
@@ -86,8 +90,8 @@
                 ,(make-orrient-timers-event :name "Pylons"     :offset 90 :frequency 120 :length 75))))
   "List of meta events.")
 
-(defvar orrient-timers-buffer "*orrient-event-timers*")
-
+
+;; Event prediction
 (defun orrient--timers-current-time ()
   "Return current time in minutes from UTC 0."
   (let ((time (decode-time nil t nil)))
@@ -129,6 +133,8 @@
         (iter-yield next-event-instance)
         (setq time (cdr next-event-instance))))))
 
+
+;; Rendering
 (defun orrient--timers-heading-length ()
   (let ((name-lengths (mapcar (lambda (meta)
                                 (cons meta (length (orrient-timers-meta-name meta))))
