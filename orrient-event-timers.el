@@ -100,7 +100,22 @@
       :events `(,(make-orrient-timers-event :name "Challenges" :offset 45 :frequency 120 :length 15)
                 ,(make-orrient-timers-event :name "Octovine"   :offset 60 :frequency 120 :length 20)
                 ,(make-orrient-timers-event :name "Reset"      :offset 80 :frequency 120 :length 10)
-                ,(make-orrient-timers-event :name "Pylons"     :offset 90 :frequency 120 :length 75))))
+                ,(make-orrient-timers-event :name "Pylons"     :offset 90 :frequency 120 :length 75)))
+    ,(make-orrient-timers-meta :name "Tangled Depths" :category 'heart-of-thorns
+      :events `(,(make-orrient-timers-event :name "Prep"              :offset 25 :frequency 120 :length  5)
+                ,(make-orrient-timers-event :name "Chak Gerent"       :offset 30 :frequency 120 :length 20)
+                ,(make-orrient-timers-event :name "Help the Outposts" :offset 50 :frequency 120 :length 95)))
+    ,(make-orrient-timers-meta :name "Dragons Stand" :category 'heart-of-thorns
+      :events `(,(make-orrient-timers-event :name "Dragon's Stand" :offset 90 :frequency 120 :length 120)))
+    ,(make-orrient-timers-meta :name "Lake Doric" :category 'living-world-3
+      :events `(,(make-orrient-timers-event :name "Noran's Homestead" :offset  30 :frequency 120 :length 30)
+                ,(make-orrient-timers-event :name "Saidra's Haven"    :offset  60 :frequency 120 :length 45)
+                ,(make-orrient-timers-event :name "New Loamhurst"     :offset 105 :frequency 120 :length 45)))
+    ,(make-orrient-timers-meta :name "Crystal Oasis" :category 'path-of-fire
+      :events `(,(make-orrient-timers-event :name "Rounds 1 to 3" :offset  5 :frequency 120 :length 10)
+                ,(make-orrient-timers-event :name "Pinata/Reset"  :offset 20 :frequency 120 :length 10)))
+    ,(make-orrient-timers-meta :name "Desert Highlands" :category 'path-of-fire
+      :events `(,(make-orrient-timers-event :name "Buried Treasure" :offset 5 :frequency 120 :length 10))))
   "List of meta events.")
 
 (defvar orrient--timers-heading-length nil)
