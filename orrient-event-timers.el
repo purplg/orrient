@@ -213,8 +213,14 @@
 (defun orrient--timers-meta-next-event (meta time)
   (let* ((events (orrient-timers-meta-events meta)))
     (mapcar (lambda (event)
-              (orrient--timers-event-next-occurance event current-time))
+              (orrient--timers-event-next-occurance event time))
             events)))
+
+(defun orrient--timers-time-until-next-event (meta time)
+  (let ((next-event-offset (apply 'min (orrient--timers-meta-next-event
+                                        meta
+                                        time))))
+    (- next-event-offset time)))
 
 (iter-defun orrient--timers-meta-iter (meta time)
   "Yields a cons of a orrient-timers-event to it's next start time."
@@ -252,7 +258,7 @@
 (defun orrient-timers-meta-widget-create (widget)
   (let ((meta (widget-get widget :meta)))
     ;; (widget-put widget :action (orrient-timers-open-meta meta)) ; TODO Add new buffer for more detailed information on meta
-    (widget-put widget :tag (propertize (format (format "%%%ss " (orrient--timers-heading-length))
+    (widget-put widget :tag (propertize (format (format "%%%ss " (1+ (orrient--timers-heading-length)))
                                                 (orrient-timers-meta-name meta))
                                         'face (orrient--timers-get-category-face (orrient-timers-meta-category meta))))
     (widget-put widget :format "%t %v"))
@@ -267,6 +273,23 @@
                                           orrient--timers-event-length))
     (widget-put widget :format "%[%t%]"))
   (widget-default-create widget))
+
+(defun orrient-timers-countdown-widget-create (widget)
+  (let ((meta (widget-get widget :value)))
+    (widget-put widget :value (orrient-timers-format-countdown (orrient--timers-time-until-next-event
+                                                                meta
+                                                                (orrient--timers-current-time))))
+    (widget-put widget :size orrient--timers-event-length)
+    (widget-put widget :value-create 'widget-field-value-create)
+    (widget-put widget :format "%v"))
+  (widget-default-create widget))
+
+(defun orrient-timers-format-countdown (minutes)
+  (let ((hours (/ minutes 60))
+        (minutes (% minutes 60)))
+    (if (> hours 0)
+        (format "            %2dh %2dm" hours minutes)
+      (format "            %6dm" minutes))))
 
 
 ;; Rendering
@@ -293,8 +316,10 @@
 
 (defun orrient--timers-upcoming-events-widgets (meta)
   (let ((iter (orrient--timers-meta-iter meta (orrient--timers-current-time))))
-    (cl-loop repeat 5 collect
-             `(orrient-timers-event ,(car (iter-next iter))))))
+    (append
+     `((orrient-timers-countdown ,meta))
+     (cl-loop repeat 5 collect
+              `(orrient-timers-event ,(car (iter-next iter)))))))
 
 (defun orrient--timers-render-buffer ()
   (interactive)
