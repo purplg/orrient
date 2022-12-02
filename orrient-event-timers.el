@@ -238,10 +238,16 @@
 
 ;; Widgets
 (define-widget 'orrient-timers-event 'push-button
-  "")
+  ""
+  :create 'orrient-timers-event-widget-create)
 
 (define-widget 'orrient-timers-meta 'group
-  "")
+  ""
+  :create 'orrient-timers-meta-widget-create)
+
+(define-widget 'orrient-timers-countdown 'push-button
+  ""
+  :create 'orrient-timers-countdown-widget-create)
 
 (defun orrient-timers-meta-widget-create (widget)
   (let ((meta (widget-get widget :meta)))
@@ -254,7 +260,7 @@
   (widget-default-create widget))
 
 (defun orrient-timers-event-widget-create (widget)
-  (let ((event (widget-get widget :event)))
+  (let ((event (widget-get widget :value)))
     (widget-put widget :tag (string-limit (format
                                            (format "%%-%ss " orrient--timers-event-length)
                                            (orrient-timers-event-name event))
@@ -281,18 +287,14 @@
 
 (defun orrient--timers-draw-meta (meta)
   (widget-create
-   (append `(orrient-timers-meta
-             :meta ,meta
-             :create orrient-timers-meta-widget-create)
+   (append `(orrient-timers-meta :meta ,meta)
            (orrient--timers-upcoming-events-widgets meta)))
   (insert "\n"))
 
 (defun orrient--timers-upcoming-events-widgets (meta)
   (let ((iter (orrient--timers-meta-iter meta (orrient--timers-current-time))))
     (cl-loop repeat 5 collect
-             `(orrient-timers-event
-               :create orrient-timers-event-widget-create
-               :event ,(car (iter-next iter))))))
+             `(orrient-timers-event ,(car (iter-next iter))))))
 
 (defun orrient--timers-render-buffer ()
   (interactive)
