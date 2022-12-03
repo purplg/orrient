@@ -191,7 +191,6 @@
     ('icebrood-saga 'orrient-timers-category-icebrood-saga)
     ('end-of-dragons 'orrient-timers-category-end-of-dragons)))
 
-
 
 ;; Event prediction
 (defun orrient--timers-current-time ()
