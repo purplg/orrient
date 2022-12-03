@@ -199,7 +199,7 @@
     (+ (* 60 (decoded-time-hour time))
        (decoded-time-minute time))))
 
-(defun orrient--timers-event-next-occurance (event time)
+(defun orrient--timers-event-next (event time)
   (let* ((offset (orrient-timers-event-offset event))
          (frequency (orrient-timers-event-frequency event))
          (index (/ time frequency))
@@ -212,7 +212,7 @@
 (defun orrient--timers-meta-next-event (meta time)
   (let* ((events (orrient-timers-meta-events meta)))
     (mapcar (lambda (event)
-              (orrient--timers-event-next-occurance event time))
+              (orrient--timers-event-next event time))
             events)))
 
 (defun orrient--timers-time-until-next-event (meta time)
@@ -227,7 +227,7 @@
     (while t
       (let* ((upcoming-events (seq-map
                               (lambda (event)
-                                (cons event (orrient--timers-event-next-occurance event time)))
+                                (cons event (orrient--timers-event-next event time)))
                               events))
              (next-event-instance (seq-reduce (lambda (upcoming-event-a upcoming-event-b)
                                                 (if (and upcoming-event-a
