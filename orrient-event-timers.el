@@ -211,16 +211,18 @@
     next-start))
 
 (defun orrient--timers-meta-next-event (meta time)
-  (let* ((events (orrient-timers-meta-events meta)))
-    (mapcar (lambda (event)
-              (orrient--timers-event-next event time))
-            events)))
-
-(defun orrient--timers-time-until-next-event (meta time)
-  (let ((next-event-offset (apply 'min (orrient--timers-meta-next-event
-                                        meta
-                                        time))))
-    (- next-event-offset time)))
+  "Returns a cons of the next `orrient-timers-event' and minutes of
+it's next occurance from UTC 0."
+  (let ((event-times (mapcar (lambda (event)
+                               (cons event (orrient--timers-event-next event time)))
+                             (orrient-timers-meta-events meta))))
+    (seq-reduce (lambda (a b)
+                  (if (and a
+                       (< (cdr a) (cdr b)))
+                      a
+                    b))
+                event-times
+                nil)))
 
 (iter-defun orrient--timers-meta-iter (meta time)
   "Yields a cons of a orrient-timers-event to it's next start time."
@@ -276,9 +278,10 @@
 
 (defun orrient-timers-countdown-widget-value-create (widget)
   "Format the remaining time into hours and minutes."
-  (let* ((value (widget-get widget :value))
-         (hours (/ value 60))
-         (minutes (% value 60)))
+  (let* ((event-occurance (widget-get widget :value))
+         (time-until (- (cdr event-occurance) (orrient--timers-current-time)))
+         (hours (/ time-until 60))
+         (minutes (% time-until 60)))
     (insert
      (format "%s %s "
              (if (> hours 0)
@@ -288,9 +291,7 @@
 
 (defun orrient-timers-countdown-widget-create (widget)
   (let ((meta (widget-get widget :value)))
-    (widget-put widget :value (orrient--timers-time-until-next-event
-                               meta
-                               (orrient--timers-current-time)))
+    (widget-put widget :value (orrient--timers-meta-next-event meta (orrient--timers-current-time)))
     (widget-put widget :value-create 'orrient-timers-countdown-widget-value-create)
     (widget-put widget :format "%v"))
   (widget-default-create widget))
