@@ -200,6 +200,7 @@
        (decoded-time-minute time))))
 
 (defun orrient--timers-event-next (event time)
+  "Returns next event occurance in minutes offset from UTC 0."
   (let* ((offset (orrient-timers-event-offset event))
          (frequency (orrient-timers-event-frequency event))
          (index (/ time frequency))
