@@ -273,22 +273,26 @@
     (widget-put widget :format "%[%t%]"))
   (widget-default-create widget))
 
+(defun orrient-timers-countdown-widget-value-create (widget)
+  "Format the remaining time into hours and minutes."
+  (let* ((value (widget-get widget :value))
+         (hours (/ value 60))
+         (minutes (% value 60)))
+    (insert
+     (format "%s %s "
+             (if (> hours 0)
+                 (format "%2dh" hours)
+               "   ")
+             (format "%02dm" minutes)))))
+
 (defun orrient-timers-countdown-widget-create (widget)
   (let ((meta (widget-get widget :value)))
-    (widget-put widget :value (orrient-timers-format-countdown (orrient--timers-time-until-next-event
-                                                                meta
-                                                                (orrient--timers-current-time))))
-    (widget-put widget :size orrient--timers-event-length)
-    (widget-put widget :value-create 'widget-field-value-create)
+    (widget-put widget :value (orrient--timers-time-until-next-event
+                               meta
+                               (orrient--timers-current-time)))
+    (widget-put widget :value-create 'orrient-timers-countdown-widget-value-create)
     (widget-put widget :format "%v"))
   (widget-default-create widget))
-
-(defun orrient-timers-format-countdown (minutes)
-  (let ((hours (/ minutes 60))
-        (minutes (% minutes 60)))
-    (if (> hours 0)
-        (format "            %2dh %2dm" hours minutes)
-      (format "            %6dm" minutes))))
 
 
 ;; Rendering
