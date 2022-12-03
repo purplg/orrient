@@ -247,35 +247,35 @@ it's next occurance from UTC 0."
 ;; Widgets
 (define-widget 'orrient-timers-meta 'group
   ""
-  :create 'orrient-timers-meta-widget-create)
+  :create 'orrient-timers-meta-widget-create
+  :format "%t %v")
 
 (defun orrient-timers-meta-widget-create (widget)
   (let ((meta (widget-get widget :meta)))
     ;; (widget-put widget :action (orrient-timers-open-meta meta)) ; TODO Add new buffer for more detailed information on meta
     (widget-put widget :tag (propertize (format (format "%%%ss " (1+ (orrient--timers-heading-length)))
                                                 (orrient-timers-meta-name meta))
-                                        'face (orrient--timers-get-category-face (orrient-timers-meta-category meta))))
-    (widget-put widget :format "%t %v"))
-
+                                        'face (orrient--timers-get-category-face (orrient-timers-meta-category meta)))))
   (widget-default-create widget))
 
 (define-widget 'orrient-timers-event 'push-button
   ""
-  :create 'orrient-timers-event-widget-create)
+  :create 'orrient-timers-event-widget-create
+  :format "%[%t%]")
 
 (defun orrient-timers-event-widget-create (widget)
   (let ((event (widget-get widget :value)))
     (widget-put widget :tag (string-limit (format
                                            (format "%%-%ss " orrient--timers-event-length)
                                            (orrient-timers-event-name event))
-                                          orrient--timers-event-length))
-    (widget-put widget :format "%[%t%]"))
+                                          orrient--timers-event-length)))
   (widget-default-create widget))
 
 (define-widget 'orrient-timers-countdown 'push-button
   ""
   :create 'orrient-timers-countdown-widget-create
-  :value-create 'orrient-timers-countdown-widget-value-create)
+  :value-create 'orrient-timers-countdown-widget-value-create
+  :format "%v")
 
 (defun orrient-timers-countdown-widget-value-create (widget)
   "Format the remaining time into hours and minutes."
@@ -292,8 +292,7 @@ it's next occurance from UTC 0."
 
 (defun orrient-timers-countdown-widget-create (widget)
   (let ((meta (widget-get widget :value)))
-    (widget-put widget :value (orrient--timers-meta-next-event meta (orrient--timers-current-time)))
-    (widget-put widget :format "%v"))
+    (widget-put widget :value (orrient--timers-meta-next-event meta (orrient--timers-current-time))))
   (widget-default-create widget))
 
 
