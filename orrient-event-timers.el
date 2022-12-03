@@ -275,12 +275,14 @@ it's next occurance from UTC 0."
   ""
   :create 'orrient-timers-countdown-widget-create
   :value-create 'orrient-timers-countdown-widget-value-create
+  :time (orrient--timers-current-time)
   :format "%v")
 
 (defun orrient-timers-countdown-widget-value-create (widget)
   "Format the remaining time into hours and minutes."
   (let* ((event-occurance (widget-get widget :value))
-         (time-until (- (cdr event-occurance) (orrient--timers-current-time)))
+         (time (widget-get widget :time))
+         (time-until (- (cdr event-occurance) time))
          (hours (/ time-until 60))
          (minutes (% time-until 60)))
     (insert
@@ -291,8 +293,9 @@ it's next occurance from UTC 0."
              (format "%02dm" minutes)))))
 
 (defun orrient-timers-countdown-widget-create (widget)
-  (let ((meta (widget-get widget :value)))
-    (widget-put widget :value (orrient--timers-meta-next-event meta (orrient--timers-current-time))))
+  (let ((meta (widget-get widget :value))
+        (time (widget-get widget :time)))
+    (widget-put widget :value (orrient--timers-meta-next-event meta time)))
   (widget-default-create widget))
 
 
@@ -312,27 +315,25 @@ it's next occurance from UTC 0."
                                name-lengths
                                nil))))))
 
-(defun orrient--timers-draw-meta (meta)
+(defun orrient--timers-draw-meta (meta time)
   (widget-create
    (append `(orrient-timers-meta :meta ,meta)
-           (orrient--timers-upcoming-events-widgets meta)))
+           (orrient--timers-upcoming-events-widgets meta time)))
   (insert "\n"))
 
-(defun orrient--timers-upcoming-events-widgets (meta)
-  (let ((iter (orrient--timers-meta-iter meta (orrient--timers-current-time))))
+(defun orrient--timers-upcoming-events-widgets (meta time)
+  (let ((iter (orrient--timers-meta-iter meta time)))
     (append
-     `((orrient-timers-countdown ,meta))
+     `((orrient-timers-countdown :time ,time ,meta))
      (cl-loop repeat 5 collect
               `(orrient-timers-event ,(car (iter-next iter)))))))
 
-(defun orrient--timers-render-buffer ()
-  (interactive)
+(defun orrient--timers-render-buffer-at-time (time)
   (with-current-buffer (get-buffer-create orrient-timers-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (dolist (meta orrient-timers-schedule)
-        (orrient--timers-draw-meta meta)))
-    (orrient-timers-mode)))
+        (orrient--timers-draw-meta meta time)))))
 
 (define-derived-mode orrient-timers-mode special-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
