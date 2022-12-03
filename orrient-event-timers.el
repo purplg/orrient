@@ -242,17 +242,9 @@
 
 
 ;; Widgets
-(define-widget 'orrient-timers-event 'push-button
-  ""
-  :create 'orrient-timers-event-widget-create)
-
 (define-widget 'orrient-timers-meta 'group
   ""
   :create 'orrient-timers-meta-widget-create)
-
-(define-widget 'orrient-timers-countdown 'push-button
-  ""
-  :create 'orrient-timers-countdown-widget-create)
 
 (defun orrient-timers-meta-widget-create (widget)
   (let ((meta (widget-get widget :meta)))
@@ -264,6 +256,10 @@
 
   (widget-default-create widget))
 
+(define-widget 'orrient-timers-event 'push-button
+  ""
+  :create 'orrient-timers-event-widget-create)
+
 (defun orrient-timers-event-widget-create (widget)
   (let ((event (widget-get widget :value)))
     (widget-put widget :tag (string-limit (format
@@ -272,6 +268,10 @@
                                           orrient--timers-event-length))
     (widget-put widget :format "%[%t%]"))
   (widget-default-create widget))
+
+(define-widget 'orrient-timers-countdown 'push-button
+  ""
+  :create 'orrient-timers-countdown-widget-create)
 
 (defun orrient-timers-countdown-widget-value-create (widget)
   "Format the remaining time into hours and minutes."
