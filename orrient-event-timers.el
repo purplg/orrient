@@ -18,7 +18,6 @@
 
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "g r") 'orrient--timers-render-buffer)
     (define-key map (kbd "RET") 'widget-button-press)
     (define-key map (kbd "C-n") 'orrient-timers-forward)
     (define-key map (kbd "C-p") 'orrient-timers-backward)
@@ -26,6 +25,15 @@
     (define-key map [backtab] 'widget-backward)
     map)
   "Keymap for `orrient-timers-mode'.")
+
+(when (featurep 'evil)
+  (add-hook 'orrient-timers-mode-hook
+            (lambda ()
+              (with-current-buffer (get-buffer orrient-timers-buffer)
+                (evil-local-set-key 'normal (kbd "]") 'orrient-timers-forward)
+                (evil-local-set-key 'normal (kbd "[") 'orrient-timers-backward)
+                (evil-local-set-key 'normal (kbd "gk") 'orrient-timers-forward)
+                (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)))))
 
 (defcustom orrient-timers-skip-step 5
   "Amount of time to skip when stepping forward or backwards in
@@ -35,15 +43,36 @@ time.")
 ;; User functions
 (defun orrient-timers-forward (&optional step)
   (interactive)
-  (unless step
-    (setq step orrient-timers-skip-step))
-  (orrient--timers-render-buffer-at-time (+ orrient-timers-time step)))
+  (let ((point (point)))
+    (orrient--timers-render-buffer-at-time
+     (+ orrient-timers-time (or step orrient-timers-skip-step)))
+    (goto-char point)))
 
 (defun orrient-timers-backward (&optional step)
   (interactive)
-  (unless step
-    (setq step orrient-timers-skip-step))
-  (orrient--timers-render-buffer-at-time (- orrient-timers-time step)))
+  (let ((point (point)))
+    (orrient--timers-render-buffer-at-time
+     (- orrient-timers-time (or step orrient-timers-skip-step)))
+    (goto-char point)))
+
+(defun orrient-timers-refresh (&rest _)
+  (interactive)
+  (orrient--timers-render-buffer-at-time
+   (or orrient-timers-time
+       (orrient--timers-current-time))))
+
+(defun orrient-timers-now (&rest _)
+  (interactive)
+  (orrient--timers-render-buffer-at-time
+   (orrient--timers-current-time)))
+
+(defun orrient-timers-open ()
+  (interactive)
+  (orrient-timers-refresh)
+  (let* ((buffer (get-buffer orrient-timers-buffer))
+         (window (get-buffer-window buffer)))
+    (pop-to-buffer buffer)
+    (set-window-dedicated-p window t)))
 
 
 ;; Data
@@ -375,20 +404,12 @@ it's next occurance from UTC 0."
   (setq orrient-timers-time (% time 1440))
   (orrient--timers-render-buffer))
 
-(defun orrient-timers-open ()
-  (interactive)
-  (orrient--timers-render-buffer-at-time (or orrient-timers-time
-                                             (orrient--timers-current-time)))
-  (let* ((buffer (get-buffer orrient-timers-buffer))
-         (window (get-buffer-window buffer)))
-    (pop-to-buffer buffer)
-    (set-window-dedicated-p window t)))
-
 (define-derived-mode orrient-timers-mode special-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
   :group 'orrient
   :syntax-table nil
   :abbrev-table nil
-  :interactive t)
+  :interactive t
+  (setq-local revert-buffer-function #'orrient-timers-now))
 
 ;;; orrient-event-timers.el ends here
