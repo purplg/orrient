@@ -32,6 +32,7 @@
               (with-current-buffer (get-buffer orrient-timers-buffer)
                 (evil-local-set-key 'normal (kbd "]") 'orrient-timers-forward)
                 (evil-local-set-key 'normal (kbd "[") 'orrient-timers-backward)
+                (evil-local-set-key 'normal (kbd "gt") 'orrient-timers-goto)
                 (evil-local-set-key 'normal (kbd "gk") 'orrient-timers-forward)
                 (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)))))
 
@@ -65,6 +66,13 @@ time.")
   (interactive)
   (orrient--timers-render-buffer-at-time
    (orrient--timers-current-time)))
+
+(defun orrient-timers-goto (time)
+  (interactive
+   (let ((user-time (parse-time-string (format "%s" (read-from-minibuffer "Time (UTC): ")))))
+     (list (+ (* (decoded-time-hour user-time) 60)
+              (decoded-time-minute user-time)))))
+  (orrient--timers-render-buffer-at-time time))
 
 (defun orrient-timers-open ()
   (interactive)
