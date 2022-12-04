@@ -366,7 +366,7 @@ it's next occurance from UTC 0."
       (erase-buffer)
       (let ((hours (/ orrient-timers-time 60))
             (minutes (% orrient-timers-time 60)))
-        (insert (format "Current time: %02d:%02d\n" hours minutes)))
+        (insert (format "Current time: %02d:%02d UTC\n" hours minutes)))
       (dolist (meta orrient-timers-schedule)
         (orrient--timers-draw-meta meta orrient-timers-time)))))
 
