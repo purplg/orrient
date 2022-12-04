@@ -20,10 +20,31 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "g r") 'orrient--timers-render-buffer)
     (define-key map (kbd "RET") 'widget-button-press)
+    (define-key map (kbd "C-n") 'orrient-timers-forward)
+    (define-key map (kbd "C-p") 'orrient-timers-backward)
     (define-key map [tab] 'widget-forward)
     (define-key map [backtab] 'widget-backward)
     map)
   "Keymap for `orrient-timers-mode'.")
+
+(defcustom orrient-timers-skip-step 5
+  "Amount of time to skip when stepping forward or backwards in
+time.")
+
+
+;; User functions
+(defun orrient-timers-forward (&optional step)
+  (interactive)
+  (unless step
+    (setq step orrient-timers-skip-step))
+  (orrient--timers-render-buffer-at-time (+ orrient-timers-time step)))
+
+(defun orrient-timers-backward (&optional step)
+  (interactive)
+  (unless step
+    (setq step orrient-timers-skip-step))
+  (orrient--timers-render-buffer-at-time (- orrient-timers-time step)))
+
 
 
 ;; Data
@@ -131,6 +152,8 @@
 (defvar orrient--timers-heading-length nil)
 
 (defvar orrient--timers-event-length 20)
+
+(defvar orrient-timers-time nil)
 
 
 ;; Faces
@@ -338,12 +361,19 @@ it's next occurance from UTC 0."
      (cl-loop repeat 5 collect
               `(orrient-timers-event ,(car (iter-next iter)))))))
 
-(defun orrient--timers-render-buffer-at-time (time)
+(defun orrient--timers-render-buffer ()
   (with-current-buffer (get-buffer-create orrient-timers-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)
+      (let ((hours (/ orrient-timers-time 60))
+            (minutes (% orrient-timers-time 60)))
+        (insert (format "Current time: %02d:%02d\n" hours minutes)))
       (dolist (meta orrient-timers-schedule)
-        (orrient--timers-draw-meta meta time)))))
+        (orrient--timers-draw-meta meta orrient-timers-time)))))
+
+(defun orrient--timers-render-buffer-at-time (time)
+  (setq orrient-timers-time (% time 1440))
+  (orrient--timers-render-buffer))
 
 (define-derived-mode orrient-timers-mode special-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
