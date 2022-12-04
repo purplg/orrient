@@ -45,7 +45,6 @@ time.")
     (setq step orrient-timers-skip-step))
   (orrient--timers-render-buffer-at-time (- orrient-timers-time step)))
 
-
 
 ;; Data
 (cl-defstruct
