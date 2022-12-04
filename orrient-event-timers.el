@@ -48,8 +48,8 @@ time.")
 
 ;; Data
 (cl-defstruct
-    (orrient-timers-event
-     (:constructor make-orrient-timers-event
+    (orrient-event
+     (:constructor make-orrient-event
                    (&key name offset length frequency
                     &aux
                     (offset (+ (* 60 (pop offset))
@@ -70,82 +70,82 @@ time.")
 
 (defvar orrient-timers-schedule
   `(,(make-orrient-timers-meta :name "Day and Night" :category 'core-tyria
-      :events `(,(make-orrient-timers-event :name "Dawn"  :offset '(0 25) :frequency '(2 0) :length '(0  5))
-                ,(make-orrient-timers-event :name "Day"   :offset '(0 30) :frequency '(2 0) :length '(1 10))
-                ,(make-orrient-timers-event :name "Dusk"  :offset '(1 40) :frequency '(2 0) :length '(0  5))
-                ,(make-orrient-timers-event :name "Night" :offset '(1 45) :frequency '(2 0) :length '(0 40))))
+      :events `(,(make-orrient-event :name "Dawn"  :offset '(0 25) :frequency '(2 0) :length '(0  5))
+                ,(make-orrient-event :name "Day"   :offset '(0 30) :frequency '(2 0) :length '(1 10))
+                ,(make-orrient-event :name "Dusk"  :offset '(1 40) :frequency '(2 0) :length '(0  5))
+                ,(make-orrient-event :name "Night" :offset '(1 45) :frequency '(2 0) :length '(0 40))))
     ,(make-orrient-timers-meta :name "World Bosses" :category 'core-tyria
-      :events `(,(make-orrient-timers-event :name "Admiral Taidha Covington" :offset '(0  0) :frequency '(3 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Svanir Shaman Chief"      :offset '(0 15) :frequency '(2 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Megadestroyer"            :offset '(0 30) :frequency '(3 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Fire Elemental"           :offset '(0 45) :frequency '(2 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "The Shatterer"            :offset '(1  0) :frequency '(3 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Great Jungle Wurm"        :offset '(1 15) :frequency '(2 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Modniir Ulgoth"           :offset '(1 30) :frequency '(3 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Shadow Behemoth"          :offset '(1 45) :frequency '(2 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Golem Mark II"            :offset '(2  0) :frequency '(3 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Claw of Jormag"           :offset '(2 30) :frequency '(2 0) :length '(0 15))))
+      :events `(,(make-orrient-event :name "Admiral Taidha Covington" :offset '(0  0) :frequency '(3 0) :length '(0 15))
+                ,(make-orrient-event :name "Svanir Shaman Chief"      :offset '(0 15) :frequency '(2 0) :length '(0 15))
+                ,(make-orrient-event :name "Megadestroyer"            :offset '(0 30) :frequency '(3 0) :length '(0 15))
+                ,(make-orrient-event :name "Fire Elemental"           :offset '(0 45) :frequency '(2 0) :length '(0 15))
+                ,(make-orrient-event :name "The Shatterer"            :offset '(1  0) :frequency '(3 0) :length '(0 15))
+                ,(make-orrient-event :name "Great Jungle Wurm"        :offset '(1 15) :frequency '(2 0) :length '(0 15))
+                ,(make-orrient-event :name "Modniir Ulgoth"           :offset '(1 30) :frequency '(3 0) :length '(0 15))
+                ,(make-orrient-event :name "Shadow Behemoth"          :offset '(1 45) :frequency '(2 0) :length '(0 15))
+                ,(make-orrient-event :name "Golem Mark II"            :offset '(2  0) :frequency '(3 0) :length '(0 15))
+                ,(make-orrient-event :name "Claw of Jormag"           :offset '(2 30) :frequency '(2 0) :length '(0 15))))
     ,(make-orrient-timers-meta :name "Hard World Bosses" :category 'core-tyria
-      :events `(,(make-orrient-timers-event :name "Tequatl the Sunless" :offset '( 0 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Triple Trouble"      :offset '( 1 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Karka Queen"         :offset '( 2 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Tequatl the Sunless" :offset '( 3 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Triple Trouble"      :offset '( 4 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Karka Queen"         :offset '( 6 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Tequatl the Sunless" :offset '( 7 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Triple Trouble"      :offset '( 8 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Karka Queen"         :offset '(10 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Tequatl the Sunless" :offset '(11 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Triple Trouble"      :offset '(12 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Karka Queen"         :offset '(15 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Tequatl the Sunless" :offset '(16 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Triple Trouble"      :offset '(17 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Karka Queen"         :offset '(18 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Tequatl the Sunless" :offset '(19 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Triple Trouble"      :offset '(20 0) :frequency '(24 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Karka Queen"         :offset '(23 0) :frequency '(24 0) :length '(0 30))))
+      :events `(,(make-orrient-event :name "Tequatl the Sunless" :offset '( 0 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Triple Trouble"      :offset '( 1 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Karka Queen"         :offset '( 2 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset '( 3 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Triple Trouble"      :offset '( 4 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Karka Queen"         :offset '( 6 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset '( 7 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Triple Trouble"      :offset '( 8 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Karka Queen"         :offset '(10 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset '(11 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Triple Trouble"      :offset '(12 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Karka Queen"         :offset '(15 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset '(16 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Triple Trouble"      :offset '(17 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Karka Queen"         :offset '(18 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Tequatl the Sunless" :offset '(19 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Triple Trouble"      :offset '(20 0) :frequency '(24 0) :length '(0 30))
+                ,(make-orrient-event :name "Karka Queen"         :offset '(23 0) :frequency '(24 0) :length '(0 30))))
     ,(make-orrient-timers-meta :name "Ley-Line Anomaly" :category 'core-tyria
-      :events `(,(make-orrient-timers-event :name "Timberline Falls" :offset '(0 20) :frequency '(6 0) :length '(0 20))
-                ,(make-orrient-timers-event :name "Iron Marches"     :offset '(2 20) :frequency '(6 0) :length '(0 20))
-                ,(make-orrient-timers-event :name "Gendarran Fields" :offset '(4 20) :frequency '(6 0) :length '(0 20))))
+      :events `(,(make-orrient-event :name "Timberline Falls" :offset '(0 20) :frequency '(6 0) :length '(0 20))
+                ,(make-orrient-event :name "Iron Marches"     :offset '(2 20) :frequency '(6 0) :length '(0 20))
+                ,(make-orrient-event :name "Gendarran Fields" :offset '(4 20) :frequency '(6 0) :length '(0 20))))
     ,(make-orrient-timers-meta :name "PVP Tournaments" :category 'core-tyria
-      :events `(,(make-orrient-timers-event :name "balthazar's brawl"  :offset '(0 0) :frequency '(12 0) :length '(1 0))
-                ,(make-orrient-timers-event :name "grenth's game"      :offset '(3 0) :frequency '(12 0) :length '(1 0))
-                ,(make-orrient-timers-event :name "melandru's matchup" :offset '(6 0) :frequency '(12 0) :length '(1 0))
-                ,(make-orrient-timers-event :name "Lyssa's Legions"    :offset '(9 0) :frequency '(12 0) :length '(1 0))))
+      :events `(,(make-orrient-event :name "balthazar's brawl"  :offset '(0 0) :frequency '(12 0) :length '(1 0))
+                ,(make-orrient-event :name "grenth's game"      :offset '(3 0) :frequency '(12 0) :length '(1 0))
+                ,(make-orrient-event :name "melandru's matchup" :offset '(6 0) :frequency '(12 0) :length '(1 0))
+                ,(make-orrient-event :name "Lyssa's Legions"    :offset '(9 0) :frequency '(12 0) :length '(1 0))))
     ,(make-orrient-timers-meta :name "Eye of the North" :category 'living-world-1
-      :events `(,(make-orrient-timers-event :name "Twisted Marionette"     :offset '(0  0) :frequency '(2 0) :length '(0 20))
-                ,(make-orrient-timers-event :name "Battle For Lion's Arch" :offset '(0 30) :frequency '(2 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Tower of Nightmares"    :offset '(1 30) :frequency '(2 0) :length '(0 15))))
+      :events `(,(make-orrient-event :name "Twisted Marionette"     :offset '(0  0) :frequency '(2 0) :length '(0 20))
+                ,(make-orrient-event :name "Battle For Lion's Arch" :offset '(0 30) :frequency '(2 0) :length '(0 15))
+                ,(make-orrient-event :name "Tower of Nightmares"    :offset '(1 30) :frequency '(2 0) :length '(0 15))))
     ,(make-orrient-timers-meta :name "Scarlets Invasion" :category 'living-world-1
-      :events `(,(make-orrient-timers-event :name "TODO" :offset '(0  0) :frequency '(2 0) :length '(0 20))))
+      :events `(,(make-orrient-event :name "TODO" :offset '(0  0) :frequency '(2 0) :length '(0 20))))
     ,(make-orrient-timers-meta :name "Dry Top" :category 'living-world-2
-      :events `(,(make-orrient-timers-event :name "Crash Site" :offset '(0  0) :frequency '(1 0) :length '(0 40))
-                ,(make-orrient-timers-event :name "Sandstorm"  :offset '(0 40) :frequency '(1 0) :length '(0 20))))
+      :events `(,(make-orrient-event :name "Crash Site" :offset '(0  0) :frequency '(1 0) :length '(0 40))
+                ,(make-orrient-event :name "Sandstorm"  :offset '(0 40) :frequency '(1 0) :length '(0 20))))
     ,(make-orrient-timers-meta :name "Verdant Brink" :category 'heart-of-thorns
-      :events `(,(make-orrient-timers-event :name "Night: Night and the Enemy"  :offset '(1 45) :frequency '(2 0) :length '(0 25))
-                ,(make-orrient-timers-event :name "Night Bosses"                :offset '(0 10) :frequency '(2 0) :length '(0 20))
-                ,(make-orrient-timers-event :name "Day: Securing Verdant Brink" :offset '(0 30) :frequency '(2 0) :length '(1 15))))
+      :events `(,(make-orrient-event :name "Night: Night and the Enemy"  :offset '(1 45) :frequency '(2 0) :length '(0 25))
+                ,(make-orrient-event :name "Night Bosses"                :offset '(0 10) :frequency '(2 0) :length '(0 20))
+                ,(make-orrient-event :name "Day: Securing Verdant Brink" :offset '(0 30) :frequency '(2 0) :length '(1 15))))
     ,(make-orrient-timers-meta :name "Auric Basin" :category 'heart-of-thorns
-      :events `(,(make-orrient-timers-event :name "Challenges" :offset '(0 45) :frequency '(2 0) :length '(0 15))
-                ,(make-orrient-timers-event :name "Octovine"   :offset '(1  0) :frequency '(2 0) :length '(0 20))
-                ,(make-orrient-timers-event :name "Reset"      :offset '(1 20) :frequency '(2 0) :length '(0 10))
-                ,(make-orrient-timers-event :name "Pylons"     :offset '(1 30) :frequency '(2 0) :length '(1 15))))
+      :events `(,(make-orrient-event :name "Challenges" :offset '(0 45) :frequency '(2 0) :length '(0 15))
+                ,(make-orrient-event :name "Octovine"   :offset '(1  0) :frequency '(2 0) :length '(0 20))
+                ,(make-orrient-event :name "Reset"      :offset '(1 20) :frequency '(2 0) :length '(0 10))
+                ,(make-orrient-event :name "Pylons"     :offset '(1 30) :frequency '(2 0) :length '(1 15))))
     ,(make-orrient-timers-meta :name "Tangled Depths" :category 'heart-of-thorns
-      :events `(,(make-orrient-timers-event :name "Prep"              :offset '(0 25) :frequency '(2 0) :length '(0  5))
-                ,(make-orrient-timers-event :name "Chak Gerent"       :offset '(0 30) :frequency '(2 0) :length '(0 20))
-                ,(make-orrient-timers-event :name "Help the Outposts" :offset '(0 50) :frequency '(2 0) :length '(1 35))))
+      :events `(,(make-orrient-event :name "Prep"              :offset '(0 25) :frequency '(2 0) :length '(0  5))
+                ,(make-orrient-event :name "Chak Gerent"       :offset '(0 30) :frequency '(2 0) :length '(0 20))
+                ,(make-orrient-event :name "Help the Outposts" :offset '(0 50) :frequency '(2 0) :length '(1 35))))
     ,(make-orrient-timers-meta :name "Dragons Stand" :category 'heart-of-thorns
-      :events `(,(make-orrient-timers-event :name "Dragon's Stand" :offset '(0 90) :frequency '(2 0) :length '(2 0))))
+      :events `(,(make-orrient-event :name "Dragon's Stand" :offset '(0 90) :frequency '(2 0) :length '(2 0))))
     ,(make-orrient-timers-meta :name "Lake Doric" :category 'living-world-3
-      :events `(,(make-orrient-timers-event :name "Noran's Homestead" :offset '(0 30) :frequency '(2 0) :length '(0 30))
-                ,(make-orrient-timers-event :name "Saidra's Haven"    :offset '(1  0) :frequency '(2 0) :length '(0 45))
-                ,(make-orrient-timers-event :name "New Loamhurst"     :offset '(1 45) :frequency '(2 0) :length '(0 45))))
+      :events `(,(make-orrient-event :name "Noran's Homestead" :offset '(0 30) :frequency '(2 0) :length '(0 30))
+                ,(make-orrient-event :name "Saidra's Haven"    :offset '(1  0) :frequency '(2 0) :length '(0 45))
+                ,(make-orrient-event :name "New Loamhurst"     :offset '(1 45) :frequency '(2 0) :length '(0 45))))
     ,(make-orrient-timers-meta :name "Crystal Oasis" :category 'path-of-fire
-      :events `(,(make-orrient-timers-event :name "Rounds 1 to 3" :offset '(0  5) :frequency '(2 0) :length '(0 10))
-                ,(make-orrient-timers-event :name "Pinata/Reset"  :offset '(0 20) :frequency '(2 0) :length '(0 10))))
+      :events `(,(make-orrient-event :name "Rounds 1 to 3" :offset '(0  5) :frequency '(2 0) :length '(0 10))
+                ,(make-orrient-event :name "Pinata/Reset"  :offset '(0 20) :frequency '(2 0) :length '(0 10))))
     ,(make-orrient-timers-meta :name "Desert Highlands" :category 'path-of-fire
-      :events `(,(make-orrient-timers-event :name "Buried Treasure" :offset '(0 5) :frequency '(2 0) :length '(0 10)))))
+      :events `(,(make-orrient-event :name "Buried Treasure" :offset '(0 5) :frequency '(2 0) :length '(0 10)))))
   "List of meta events.")
 
 (defvar orrient--timers-heading-length nil)
@@ -233,8 +233,8 @@ time.")
 
 (defun orrient--timers-event-next (event time)
   "Returns next event occurance in minutes offset from UTC 0."
-  (let* ((offset (orrient-timers-event-offset event))
-         (frequency (orrient-timers-event-frequency event))
+  (let* ((offset (orrient-event-offset event))
+         (frequency (orrient-event-frequency event))
          (index (/ time frequency))
          (next-start (+ offset (* index frequency)))
          (time-until (- time next-start)))
@@ -243,7 +243,7 @@ time.")
     next-start))
 
 (defun orrient--timers-meta-next-event (meta time)
-  "Returns a cons of the next `orrient-timers-event' and minutes of
+  "Returns a cons of the next `orrient-event' and minutes of
 it's next occurance from UTC 0."
   (let ((event-times (mapcar (lambda (event)
                                (cons event (orrient--timers-event-next event time)))
@@ -257,7 +257,7 @@ it's next occurance from UTC 0."
                 nil)))
 
 (iter-defun orrient--timers-meta-iter (meta time)
-  "Yields a cons of a orrient-timers-event to it's next start time."
+  "Yields a cons of a orrient-event to it's next start time."
   (let ((events (orrient-timers-meta-events meta)))
     (while t
       (let* ((upcoming-events (seq-map
@@ -299,7 +299,7 @@ it's next occurance from UTC 0."
   (let ((event (widget-get widget :value)))
     (widget-put widget :tag (string-limit (format
                                            (format "%%-%ss " orrient--timers-event-length)
-                                           (orrient-timers-event-name event))
+                                           (orrient-event-name event))
                                           orrient--timers-event-length)))
   (widget-default-create widget))
 
