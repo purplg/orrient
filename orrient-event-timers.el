@@ -368,11 +368,21 @@ it's next occurance from UTC 0."
             (minutes (% orrient-timers-time 60)))
         (insert (format "Current time: %02d:%02d UTC\n" hours minutes)))
       (dolist (meta orrient-timers-schedule)
-        (orrient--timers-draw-meta meta orrient-timers-time)))))
+        (orrient--timers-draw-meta meta orrient-timers-time))
+      (orrient-timers-mode))))
 
 (defun orrient--timers-render-buffer-at-time (time)
   (setq orrient-timers-time (% time 1440))
   (orrient--timers-render-buffer))
+
+(defun orrient-timers-open ()
+  (interactive)
+  (orrient--timers-render-buffer-at-time (or orrient-timers-time
+                                             (orrient--timers-current-time)))
+  (let* ((buffer (get-buffer orrient-timers-buffer))
+         (window (get-buffer-window buffer)))
+    (pop-to-buffer buffer)
+    (set-window-dedicated-p window t)))
 
 (define-derived-mode orrient-timers-mode special-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
