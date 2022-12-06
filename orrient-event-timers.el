@@ -44,6 +44,7 @@ time.")
 ;; User functions
 (defun orrient-timers-forward (&optional step)
   (interactive)
+  (orrient--timers-timer-cancel)
   (let ((point (point)))
     (orrient--timers-render-buffer-at-time
      (+ orrient-timers-time (or step orrient-timers-skip-step)))
@@ -51,32 +52,30 @@ time.")
 
 (defun orrient-timers-backward (&optional step)
   (interactive)
+  (orrient--timers-timer-cancel)
   (let ((point (point)))
     (orrient--timers-render-buffer-at-time
      (- orrient-timers-time (or step orrient-timers-skip-step)))
     (goto-char point)))
 
-(defun orrient-timers-refresh (&rest _)
-  (interactive)
-  (orrient--timers-render-buffer-at-time
-   (or orrient-timers-time
-       (orrient--timers-current-time))))
-
 (defun orrient-timers-now (&rest _)
   (interactive)
-  (orrient--timers-render-buffer-at-time
-   (orrient--timers-current-time)))
+  (orrient--timers-render-buffer-at-time (orrient--timers-current-time))
+  (orrient--timers-timer-start))
 
 (defun orrient-timers-goto (time)
   (interactive
    (let ((user-time (parse-time-string (format "%s" (read-from-minibuffer "Time (UTC): ")))))
      (list (+ (* (decoded-time-hour user-time) 60)
               (decoded-time-minute user-time)))))
+  (orrient--timers-timer-cancel)
   (orrient--timers-render-buffer-at-time time))
 
 (defun orrient-timers-open ()
   (interactive)
-  (orrient-timers-refresh)
+  (if orrient-timers-time
+      (orrient-timers-goto orrient-timers-time)
+    (orrient-timers-now))
   (let* ((buffer (get-buffer orrient-timers-buffer))
          (window (get-buffer-window buffer)))
     (pop-to-buffer buffer)
@@ -239,6 +238,29 @@ time.")
 (defvar orrient-timers-time nil)
 
 
+;; Timers
+(defvar orrient--timers-timer nil)
+
+(defun orrient--timers-timer-start ()
+  (orrient--timers-timer-cancel)
+  (setq orrient--timers-timer
+        (run-with-timer (- 60 (decoded-time-second (decode-time nil t nil)))
+                        60
+                        (lambda ()
+                          (orrient--timers-render-buffer-at-time (orrient--timers-current-time))))))
+
+(defun orrient--timers-timer-cancel ()
+  (when orrient--timers-timer
+    (cancel-timer orrient--timers-timer)
+    (setq orrient--timers-timer nil)))
+
+(defun orrient--timers-current-time ()
+  "Return current time in minutes from UTC 0."
+  (let ((time (decode-time nil t nil)))
+    (+ (* 60 (decoded-time-hour time))
+       (decoded-time-minute time))))
+
+
 ;; Faces
 (defface orrient-timers-meta
   '((t (:weight bold)))
@@ -309,12 +331,6 @@ time.")
 
 
 ;; Event prediction
-(defun orrient--timers-current-time ()
-  "Return current time in minutes from UTC 0."
-  (let ((time (decode-time nil t nil)))
-    (+ (* 60 (decoded-time-hour time))
-       (decoded-time-minute time))))
-
 (defun orrient--timers-event-next (event time)
   "Returns next event occurance in minutes offset from UTC 0."
   (let* ((offset (orrient-event-offset event))
