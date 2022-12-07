@@ -36,26 +36,39 @@
                 (evil-local-set-key 'normal (kbd "gk") 'orrient-timers-forward)
                 (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)))))
 
-(defcustom orrient-timers-skip-step 5
+(defcustom orrient-timers-skip-step 15
   "Amount of time to skip when stepping forward or backwards in
 time.")
+
+(defcustom orrient-timers-snap-to-step t
+  "Whether to snap time to `orrient-timers-skip-step' increments.
+For example, if the time is currently 01:04 and
+`orrient-timers-skip-step' is set to the default 15, then going
+forward in time by calling `orrient-timers-forward' will snap to
+01:15.")
 
 
 ;; User functions
 (defun orrient-timers-forward (&optional step)
   (interactive)
   (orrient--timers-timer-cancel)
-  (let ((point (point)))
+  (let ((point (point))
+        (step (or step orrient-timers-skip-step)))
     (orrient--timers-render-buffer-at-time
-     (+ orrient-timers-time (or step orrient-timers-skip-step)))
+     (if orrient-timers-snap-to-step
+         (* (1+ (/ orrient-timers-time step)) step)
+       (- orrient-timers-time step)))
     (goto-char point)))
 
 (defun orrient-timers-backward (&optional step)
   (interactive)
   (orrient--timers-timer-cancel)
-  (let ((point (point)))
+  (let ((point (point))
+        (step (or step orrient-timers-skip-step)))
     (orrient--timers-render-buffer-at-time
-     (- orrient-timers-time (or step orrient-timers-skip-step)))
+     (if orrient-timers-snap-to-step
+         (* (1- (/ orrient-timers-time step)) step)
+       (- orrient-timers-time step)))
     (goto-char point)))
 
 (defun orrient-timers-now (&rest _)
@@ -494,6 +507,8 @@ it's next occurance from UTC 0."
       (orrient-timers-mode))))
 
 (defun orrient--timers-render-buffer-at-time (time)
+  (when (< time 0)
+    (setq time (+ time 1440)))
   (setq orrient-timers-time (% time 1440))
   (orrient--timers-render-buffer))
 
