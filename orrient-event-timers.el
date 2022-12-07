@@ -60,8 +60,8 @@ time.")
 
 (defun orrient-timers-now (&rest _)
   (interactive)
-  (orrient--timers-render-buffer-at-time (orrient--timers-current-time))
-  (orrient--timers-timer-start))
+  (orrient--timers-timer-start)
+  (orrient--timers-render-buffer-at-time (orrient--timers-current-time)))
 
 (defun orrient-timers-goto (time)
   (interactive
@@ -254,6 +254,14 @@ time.")
     (cancel-timer orrient--timers-timer)
     (setq orrient--timers-timer nil)))
 
+(defun orrient--timers-timer-toggle ()
+  "Toggle the live update timer."
+  (if orrient--timers-timer
+      (orrient--timers-timer-cancel)
+    (orrient--timers-timer-start))
+  (save-excursion
+    (orrient--timers-render-buffer)))
+
 (defun orrient--timers-current-time ()
   "Return current time in minutes from UTC 0."
   (let ((time (decode-time nil t nil)))
@@ -430,6 +438,22 @@ it's next occurance from UTC 0."
     (widget-put widget :value (orrient--timers-meta-next-event meta time)))
   (widget-default-create widget))
 
+(define-widget 'orrient-timers-time 'push-button
+  ""
+  :tag "Current time"
+  :value-create #'orrient-timers-time-widget-value-create
+  :format "%[%t: %v%]\n"
+  :button-face 'default
+  :action (lambda (&rest _) (orrient--timers-timer-toggle)))
+
+(defun orrient-timers-time-widget-value-create (_widget)
+  (let ((hours (/ orrient-timers-time 60))
+        (minutes (% orrient-timers-time 60)))
+    (insert (format "%02d:%02d UTC" hours minutes))
+    (insert (if orrient--timers-timer
+                " (Live update)"
+              " (Paused)"))))
+
 
 ;; Rendering
 (defun orrient--timers-heading-length ()
@@ -464,9 +488,7 @@ it's next occurance from UTC 0."
   (with-current-buffer (get-buffer-create orrient-timers-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (let ((hours (/ orrient-timers-time 60))
-            (minutes (% orrient-timers-time 60)))
-        (insert (format "Current time: %02d:%02d UTC\n" hours minutes)))
+      (widget-create 'orrient-timers-time)
       (dolist (meta orrient-timers-schedule)
         (orrient--timers-draw-meta meta orrient-timers-time))
       (orrient-timers-mode))))
