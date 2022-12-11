@@ -12,17 +12,16 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'generator)
-(require 'wid-edit)
 
 (defvar orrient-timers-buffer "*orrient-event-timers*")
 
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "RET") 'widget-button-press)
-    (define-key map (kbd "C-n") 'orrient-timers-forward)
-    (define-key map (kbd "C-p") 'orrient-timers-backward)
-    (define-key map [tab] 'widget-forward)
-    (define-key map [backtab] 'widget-backward)
+    (define-key map (kbd "RET") #'widget-button-press)
+    (define-key map (kbd "C-n") #'orrient-timers-forward)
+    (define-key map (kbd "C-p") #'orrient-timers-backward)
+    (define-key map [tab] #'widget-forward)
+    (define-key map [backtab] #'widget-backward)
     map)
   "Keymap for `orrient-timers-mode'.")
 
@@ -52,24 +51,22 @@ forward in time by calling `orrient-timers-forward' will snap to
 (defun orrient-timers-forward (&optional step)
   (interactive)
   (orrient--timers-timer-cancel)
-  (let ((point (point))
-        (step (or step orrient-timers-skip-step)))
-    (orrient--timers-render-buffer-at-time
-     (if orrient-timers-snap-to-step
-         (* (1+ (/ orrient-timers-time step)) step)
-       (- orrient-timers-time step)))
-    (goto-char point)))
+  (let ((step (or step orrient-timers-skip-step))
+        (time (orrient--timers-time)))
+    (orrient--timers-update
+     (% (if orrient-timers-snap-to-step
+            (* (1+ (/ time step)) step)
+          (- time step)) 1440))))
 
 (defun orrient-timers-backward (&optional step)
   (interactive)
   (orrient--timers-timer-cancel)
-  (let ((point (point))
-        (step (or step orrient-timers-skip-step)))
-    (orrient--timers-render-buffer-at-time
+  (let ((step (or step orrient-timers-skip-step))
+        (time (orrient--timers-time)))
+    (orrient--timers-update
      (if orrient-timers-snap-to-step
-         (* (1- (/ orrient-timers-time step)) step)
-       (- orrient-timers-time step)))
-    (goto-char point)))
+         (* (1- (/ time step)) step)
+       (- time step)))))
 
 (defun orrient-timers-now (&rest _)
   (interactive)
@@ -158,9 +155,9 @@ forward in time by calling `orrient-timers-forward' will snap to
                 ,(make-orrient-event :name "Iron Marches"     :offset '(2 20) :frequency '(6 0) :length '(0 20))
                 ,(make-orrient-event :name "Gendarran Fields" :offset '(4 20) :frequency '(6 0) :length '(0 20))))
     ,(make-orrient-meta :name "PVP Tournaments" :category 'core-tyria
-      :events `(,(make-orrient-event :name "balthazar's brawl"  :offset '(0 0) :frequency '(12 0) :length '(1 0))
-                ,(make-orrient-event :name "grenth's game"      :offset '(3 0) :frequency '(12 0) :length '(1 0))
-                ,(make-orrient-event :name "melandru's matchup" :offset '(6 0) :frequency '(12 0) :length '(1 0))
+      :events `(,(make-orrient-event :name "Balthazar's Brawl"  :offset '(0 0) :frequency '(12 0) :length '(1 0))
+                ,(make-orrient-event :name "Grenth's Game"      :offset '(3 0) :frequency '(12 0) :length '(1 0))
+                ,(make-orrient-event :name "Melandru's Matchup" :offset '(6 0) :frequency '(12 0) :length '(1 0))
                 ,(make-orrient-event :name "Lyssa's Legions"    :offset '(9 0) :frequency '(12 0) :length '(1 0))))
     ,(make-orrient-meta :name "Eye of the North" :category 'living-world-1
       :events `(,(make-orrient-event :name "Twisted Marionette"     :offset '(0  0) :frequency '(2 0) :length '(0 20))
@@ -244,11 +241,17 @@ forward in time by calling `orrient-timers-forward' will snap to
                 ,(make-orrient-event :name "The Battle for the Jade Sea" :offset '(1  0) :frequency '(2 0) :length '(1  0)))))
   "List of meta events.")
 
-(defvar orrient--timers-heading-length nil)
-
-(defvar orrient--timers-event-length 20)
-
-(defvar orrient-timers-time nil)
+(defun orrient--timers-category-name (category)
+  (pcase category
+    ('core-tyria "Core Tyria")
+    ('living-world-1 "Living World S1")
+    ('living-world-2 "Living World S2")
+    ('heart-of-thorns "Heart of Thorns")
+    ('living-world-3 "Living World S3")
+    ('path-of-fire "Path of Fire")
+    ('living-world-4 "Living World S4")
+    ('icebrood-saga "The Icebrood Saga")
+    ('end-of-dragons "End of Dragons")))
 
 
 ;; Timers
@@ -260,7 +263,7 @@ forward in time by calling `orrient-timers-forward' will snap to
         (run-with-timer (- 60 (decoded-time-second (decode-time nil t nil)))
                         60
                         (lambda ()
-                          (orrient--timers-render-buffer-at-time (orrient--timers-current-time))))))
+                          (orrient--timers-update (orrient--timers-current-time))))))
 
 (defun orrient--timers-timer-cancel ()
   (when orrient--timers-timer
@@ -284,52 +287,52 @@ forward in time by calling `orrient-timers-forward' will snap to
 
 ;; Faces
 (defface orrient-timers-meta
-  '((t (:weight bold)))
+  '((t (:extend t)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-core-tyria
-  '((t (:background "#7b0418" :inherit 'orrient-timers-meta)))
+  '((t (:background "#3f010c" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-1
-  '((t (:background "#7b0418" :inherit 'orrient-timers-meta)))
+  '((t (:background "#7b0418" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-2
-  '((t (:background "#5c4a03" :inherit 'orrient-timers-meta)))
+  '((t (:background "#5c4a03" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-heart-of-thorns
-  '((t (:background "#515c03" :inherit 'orrient-timers-meta)))
+  '((t (:background "#515c03" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-3
-  '((t (:background "#4b7f40" :inherit 'orrient-timers-meta)))
+  '((t (:background "#4b7f40" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-path-of-fire
-  '((t (:background "#7b4704" :inherit 'orrient-timers-meta)))
+  '((t (:background "#7b4704" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-4
-  '((t (:background "#662a77" :inherit 'orrient-timers-meta)))
+  '((t (:background "#662a77" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-icebrood-saga
-  '((t (:background "#04497b" :inherit 'orrient-timers-meta)))
+  '((t (:background "#04497b" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-end-of-dragons
-  '((t (:background "#0b6b75" :inherit 'orrient-timers-meta)))
+  '((t (:background "#0b6b75" :extend t :inherit 'orrient-timers-meta)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
@@ -398,66 +401,16 @@ it's next occurance from UTC 0."
 
 
 ;; Widgets
-(define-widget 'orrient-timers-meta 'group
-  ""
-  :create 'orrient-timers-meta-widget-create
-  :format "%t %v")
-
-(defun orrient-timers-meta-widget-create (widget)
-  (let ((meta (widget-get widget :meta)))
-    ;; (widget-put widget :action (orrient-timers-open-meta meta)) ; TODO Add new buffer for more detailed information on meta
-    (widget-put widget :tag (propertize (format (format "%%%ss " (1+ (orrient--timers-heading-length)))
-                                                (orrient-meta-name meta))
-                                        'face (orrient--timers-get-category-face (orrient-meta-category meta)))))
-  (widget-default-create widget))
-
-(define-widget 'orrient-timers-event 'push-button
-  ""
-  :create 'orrient-timers-event-widget-create
-  :format "%[%t%]")
-
-(defun orrient-timers-event-widget-create (widget)
-  (let ((event (widget-get widget :value)))
-    (widget-put widget :tag (string-limit (format
-                                           (format "%%-%ss " orrient--timers-event-length)
-                                           (orrient-event-name event))
-                                          orrient--timers-event-length)))
-  (widget-default-create widget))
-
-(define-widget 'orrient-timers-countdown 'push-button
-  ""
-  :create 'orrient-timers-countdown-widget-create
-  :value-create 'orrient-timers-countdown-widget-value-create
-  :time (orrient--timers-current-time)
-  :format "%v")
-
-(defun orrient-timers-countdown-widget-value-create (widget)
+(defun orrient-timers-event-countdown (event-occurance time)
   "Format the remaining time into hours and minutes."
-  (let* ((event-occurance (widget-get widget :value))
-         (time (widget-get widget :time))
-         (time-until (- (cdr event-occurance) time))
+  (let* ((time-until (- (cdr event-occurance) time))
          (hours (/ time-until 60))
          (minutes (% time-until 60)))
-    (insert
-     (format "%s %s "
-             (if (> hours 0)
-                 (format "%2dh" hours)
-               "   ")
-             (format "%02dm" minutes)))))
-
-(defun orrient-timers-countdown-widget-create (widget)
-  (let ((meta (widget-get widget :value))
-        (time (widget-get widget :time)))
-    (widget-put widget :value (orrient--timers-meta-next-event meta time)))
-  (widget-default-create widget))
-
-(define-widget 'orrient-timers-time 'push-button
-  ""
-  :tag "Current time"
-  :value-create #'orrient-timers-time-widget-value-create
-  :format "%[%t: %v%]\n"
-  :button-face 'default
-  :action (lambda (&rest _) (orrient--timers-timer-toggle)))
+    (format "%10s %s "
+            (if (> hours 0)
+                (format "%2dh" hours)
+              "   ")
+            (format "%02dm" minutes))))
 
 (defun orrient-timers-time-widget-value-create (_widget)
   (let ((hours (/ orrient-timers-time 60))
@@ -469,6 +422,16 @@ it's next occurance from UTC 0."
 
 
 ;; Rendering
+(defvar-local orrient-timers-time nil)
+
+(defvar-local orrient--timers-heading-length nil)
+
+(defvar-local orrient--timers-event-length 20)
+
+(defun orrient--timers-time ()
+  (or orrient-timers-time
+      (orrient--timers-current-time)))
+
 (defun orrient--timers-heading-length ()
   (or orrient--timers-heading-length
       (setq orrient--timers-heading-length
@@ -484,12 +447,6 @@ it's next occurance from UTC 0."
                                name-lengths
                                nil))))))
 
-(defun orrient--timers-draw-meta (meta time)
-  (widget-create
-   (append `(orrient-timers-meta :meta ,meta)
-           (orrient--timers-upcoming-events-widgets meta time)))
-  (insert "\n"))
-
 (defun orrient--timers-upcoming-events-widgets (meta time)
   (let ((iter (orrient--timers-meta-iter meta time)))
     (append
@@ -497,14 +454,26 @@ it's next occurance from UTC 0."
      (cl-loop repeat 5 collect
               `(orrient-timers-event ,(car (iter-next iter)))))))
 
-(defun orrient--timers-render-buffer ()
-  (with-current-buffer (get-buffer-create orrient-timers-buffer)
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (widget-create 'orrient-timers-time)
-      (dolist (meta orrient-timers-schedule)
-        (orrient--timers-draw-meta meta orrient-timers-time))
-      (orrient-timers-mode))))
+(defun orrient--timers-header-format (time)
+  )
+
+(defun orrient--timers-entries-at-time (time)
+  (mapcar
+   (lambda (meta)
+     (let* ((meta-name (orrient-meta-name meta))
+            (meta-category (orrient-meta-category meta))
+            (next-event (orrient--timers-meta-next-event meta time)))
+       `(,meta-name
+         [,meta-name
+          (,(orrient--timers-category-name meta-category) . (id ,meta-category))
+          ,(orrient-timers-event-countdown next-event time)
+          ,(orrient-event-name (car next-event))])))
+   orrient-timers-schedule))
+
+(defun orrient--timers-update (time)
+  (setq orrient-timers-time time)
+  (setq tabulated-list-entries (orrient--timers-entries-at-time time))
+  (tabulated-list-print t t))
 
 (defun orrient--timers-render-buffer-at-time (time)
   (when (< time 0)
@@ -512,12 +481,52 @@ it's next occurance from UTC 0."
   (setq orrient-timers-time (% time 1440))
   (orrient--timers-render-buffer))
 
-(define-derived-mode orrient-timers-mode special-mode "GW2 Event Timers"
+(defun orrient-timers-open ()
+  (interactive)
+  (let* ((buffer (get-buffer-create orrient-timers-buffer))
+         (window (get-buffer-window buffer)))
+    (pop-to-buffer buffer)
+    (set-window-dedicated-p window t)
+    (with-current-buffer buffer
+      (orrient-timers-mode))))
+
+(defun orrient--timers-printer (id cols)
+  (let ((beg   (point))
+        (x     (max tabulated-list-padding 0))
+        (ncols (length tabulated-list-format))
+        (inhibit-read-only t))
+    (if (> tabulated-list-padding 0)
+        (insert (make-string x ?\s)))
+    (let ((tabulated-list--near-rows    ; Bind it if not bound yet (Bug#25506).
+           (or (bound-and-true-p tabulated-list--near-rows)
+               (list (or (tabulated-list-get-entry (pos-bol 0))
+                         cols)
+                     cols))))
+      (dotimes (n ncols)
+        (setq x (tabulated-list-print-col n (aref cols n) x)))
+      (insert ?\n)
+      ;; Ever so slightly faster than calling `put-text-property' twice.
+      (add-text-properties
+       beg (point)
+       `(tabulated-list-id ,id
+         tabulated-list-entry ,cols
+         face ,(orrient--timers-get-category-face (plist-get (cdr (aref (cadr tabulated-list--near-rows) 1)) 'id)))))))
+
+(define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
   :group 'orrient
   :syntax-table nil
   :abbrev-table nil
   :interactive t
-  (setq-local revert-buffer-function #'orrient-timers-now))
+  (setq tabulated-list-printer #'orrient--timers-printer)
+  ;; (cl-loop repeat 5 collect)
+  (setq tabulated-list-format [("Meta" 21 t)
+                               ("Category" 21 t)
+                               ("Time until" 15 t)
+                               ("Next" 21 t)])
+  (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
+  (tabulated-list-init-header)
+  (tabulated-list-print)
+  (orrient--timers-timer-start))
 
 ;;; orrient-event-timers.el ends here
