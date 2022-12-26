@@ -471,11 +471,11 @@ it's next occurance from UTC 0."
      (let* ((meta-name (orrient-meta-name meta))
             (meta-category (orrient-meta-category meta))
             (next-event (orrient--timers-meta-next-event meta time)))
-       `(,meta-name
-         [,meta-name
-          (,(orrient--timers-category-name meta-category) . (id ,meta-category))
-          ,(orrient-timers-event-countdown next-event time)
-          ,(orrient-event-name (car next-event))])))
+       (list meta-name
+             (vector meta-name
+                     (cons (orrient--timers-category-name meta-category) `(id ,meta-category))
+                     (orrient-timers-event-countdown next-event time)
+                     (orrient-event-name (car next-event))))))
    orrient-timers-schedule))
 
 (defun orrient--timers-update (time)
