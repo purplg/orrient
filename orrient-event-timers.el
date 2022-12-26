@@ -526,6 +526,9 @@ it's next occurance from UTC 0."
   :syntax-table nil
   :abbrev-table nil
   :interactive t
+  (setq-local revert-buffer-function (lambda (&rest _)
+                                       (orrient-timers-open)))
+
   (setq tabulated-list-printer #'orrient--timers-printer)
   ;; (cl-loop repeat 5 collect)
   (setq tabulated-list-format [("Meta" 21 t)
