@@ -15,6 +15,13 @@
 
 (defvar orrient-timers-buffer "*orrient-event-timers*")
 
+(defmacro orrient--timers-with-buffer (&rest body)
+  "Like `with-current-buffer' but with `orrient-timers-buffer'.
+BODY is evaluated with `orrient-timers-buffer'"
+  `(when-let ((buffer (get-buffer orrient-timers-buffer)))
+    (with-current-buffer buffer
+      ,@body)))
+
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'widget-button-press)
@@ -28,12 +35,12 @@
 (when (featurep 'evil)
   (add-hook 'orrient-timers-mode-hook
             (lambda ()
-              (with-current-buffer (get-buffer orrient-timers-buffer)
-                (evil-local-set-key 'normal (kbd "]") 'orrient-timers-forward)
-                (evil-local-set-key 'normal (kbd "[") 'orrient-timers-backward)
-                (evil-local-set-key 'normal (kbd "gt") 'orrient-timers-goto)
-                (evil-local-set-key 'normal (kbd "gk") 'orrient-timers-forward)
-                (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)))))
+              (orrient--timers-with-buffer
+               (evil-local-set-key 'normal (kbd "]") 'orrient-timers-forward)
+               (evil-local-set-key 'normal (kbd "[") 'orrient-timers-backward)
+               (evil-local-set-key 'normal (kbd "gt") 'orrient-timers-goto)
+               (evil-local-set-key 'normal (kbd "gk") 'orrient-timers-forward)
+               (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)))))
 
 (defcustom orrient-timers-skip-step 15
   "Amount of time to skip when stepping forward or backwards in
@@ -263,7 +270,8 @@ forward in time by calling `orrient-timers-forward' will snap to
         (run-with-timer (- 60 (decoded-time-second (decode-time nil t nil)))
                         60
                         (lambda ()
-                          (orrient--timers-update (orrient--timers-current-time))))))
+                          (orrient--timers-with-buffer
+                           (orrient--timers-update (orrient--timers-current-time)))))))
 
 (defun orrient--timers-timer-cancel ()
   (when orrient--timers-timer
