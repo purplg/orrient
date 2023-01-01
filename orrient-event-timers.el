@@ -248,6 +248,26 @@ forward in time by calling `orrient-timers-forward' will snap to
                 ,(make-orrient-event :name "The Battle for the Jade Sea" :offset '(1  0) :frequency '(2 0) :length '(1  0)))))
   "List of meta events.")
 
+(defvar orrient--timers-category-order
+  '(core-tyria
+    living-world-1
+    living-world-2
+    heart-of-thorns
+    living-world-3
+    path-of-fire
+    living-world-4
+    icebrood-saga
+    end-of-dragons)
+  "The order the table is sorted when sorted by 'Category'.")
+
+(defun orrient--timers-category-sort (entry-a entry-b)
+  "Predicate for `sort' that sorts categories by `orrient--timers-category-order'
+Return t when ENTRY-A is before COL-B."
+  (let ((category-a-id (plist-get (cdr (aref (nth 1 entry-a) 1)) 'id))
+        (category-b-id (plist-get (cdr (aref (nth 1 entry-b) 1)) 'id)))
+    (< (cl-position category-a-id orrient--timers-category-order)
+       (cl-position category-b-id orrient--timers-category-order))))
+
 (defun orrient--timers-category-name (category)
   (pcase category
     ('core-tyria "Core Tyria")
@@ -511,7 +531,7 @@ it's next occurance from UTC 0."
   (setq tabulated-list-printer #'orrient--timers-printer)
   ;; (cl-loop repeat 5 collect)
   (setq tabulated-list-format [("Meta" 21 t)
-                               ("Category" 21 t)
+                               ("Category" 21 orrient--timers-category-sort)
                                ("Time until" 15 t)
                                ("Next" 21 t)])
   (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
