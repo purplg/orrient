@@ -263,8 +263,8 @@ forward in time by calling `orrient-timers-forward' will snap to
 (defun orrient--timers-category-sort (entry-a entry-b)
   "Predicate for `sort' that sorts categories by `orrient--timers-category-order'
 Return t when ENTRY-A is before COL-B."
-  (let ((category-a-id (plist-get (cdr (aref (nth 1 entry-a) 1)) 'id))
-        (category-b-id (plist-get (cdr (aref (nth 1 entry-b) 1)) 'id)))
+  (let ((category-a-id (plist-get (cdr (aref (nth 1 entry-a) 1)) 'orrient-category-id))
+        (category-b-id (plist-get (cdr (aref (nth 1 entry-b) 1)) 'orrient-category-id)))
     (< (cl-position category-a-id orrient--timers-category-order)
        (cl-position category-b-id orrient--timers-category-order))))
 
@@ -488,8 +488,8 @@ it's next occurance from UTC 0."
             (time-until (- (cdr next-event) time)))
        (list meta-name
              (vector meta-name
-                     (cons (orrient--timers-category-name meta-category) `(id ,meta-category))
-                     (cons (orrient--timers-format-eta time-until) `(minutes ,time-until face ,(orrient--timers-get-countdown-face time-until)))
+                     (cons (orrient--timers-category-name meta-category) `(orrient-category-id ,meta-category))
+                     (cons (orrient--timers-format-eta time-until) `(orrient-minutes-until ,time-until face ,(orrient--timers-get-countdown-face time-until)))
                      (orrient-event-name (car next-event))))))
    orrient-timers-schedule))
 
@@ -517,7 +517,7 @@ it's next occurance from UTC 0."
   "Used for printing to the `tabulated-list'."
   (when-let ((category-info (aref cols 1))
              (category-name (car category-info))
-             (category-id (plist-get (cdr category-info) 'id))
+             (category-id (plist-get (cdr category-info) 'orrient-category-id))
              (result (propertize category-name 'face (orrient--timers-get-category-face category-id))))
     (setf (car (aref cols 1)) result))
   (tabulated-list-print-entry id cols))
