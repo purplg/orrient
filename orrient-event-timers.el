@@ -280,6 +280,13 @@ Return t when ENTRY-A is before COL-B."
     ('icebrood-saga "The Icebrood Saga")
     ('end-of-dragons "End of Dragons")))
 
+(defun orrient--timers-time-remaining-sort (entry-a entry-b)
+  "Predicate for `sort' that sorts events by how soon they will occur next.
+Return t when ENTRY-A comes before COL-B."
+  (let ((category-a-minutes (plist-get (cdr (aref (nth 1 entry-a) 2)) 'orrient-minutes-until))
+        (category-b-minutes (plist-get (cdr (aref (nth 1 entry-b) 2)) 'orrient-minutes-until)))
+    (< category-a-minutes category-b-minutes)))
+
 
 ;; Timers
 (defvar orrient--timers-timer nil)
@@ -535,7 +542,7 @@ it's next occurance from UTC 0."
   ;; (cl-loop repeat 5 collect)
   (setq tabulated-list-format [("Meta" 21 t)
                                ("Category" 21 orrient--timers-category-sort)
-                               ("Time until" 15 t)
+                               ("Time until" 15 orrient--timers-time-remaining-sort)
                                ("Next" 21 t)])
   (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
   (tabulated-list-init-header)
