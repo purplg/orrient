@@ -376,6 +376,27 @@ Return t when ENTRY-A is before COL-B."
     ('icebrood-saga 'orrient-timers-category-icebrood-saga)
     ('end-of-dragons 'orrient-timers-category-end-of-dragons)))
 
+;; Countdown faces
+(defface orrient-timers-countdown-later
+  '((t ()))
+  "Orrient face for time remaining when an event is not happening soon."
+  :group 'orrient)
+
+(defface orrient-timers-countdown-now
+  '((t (:background "#7b0418" :inherit 'orrient-timers-countdown-later)))
+  "Orrient face for time remaining when an event is happening now."
+  :group 'orrient)
+
+(defface orrient-timers-countdown-soon
+  '((t (:background "#515c03" :inherit 'orrient-timers-countdown-later)))
+  "Orrient face for time remaining when an event is happening soon."
+  :group 'orrient)
+
+(defun orrient--timers-get-countdown-face (minutes)
+  (cond ((< minutes 10) 'orrient-timers-countdown-now)
+        ((< minutes 20) 'orrient-timers-countdown-soon)
+        (t 'orrient-timers-countdown-later)))
+
 
 ;; Event prediction
 (defun orrient--timers-event-next (event time)
@@ -423,19 +444,6 @@ it's next occurance from UTC 0."
         (setq time (cdr next-event-instance))))))
 
 
-;; Widgets
-(defun orrient-timers-event-countdown (event-occurance time)
-  "Format the remaining time into hours and minutes."
-  (let* ((time-until (- (cdr event-occurance) time))
-         (hours (/ time-until 60))
-         (minutes (% time-until 60)))
-    (format "%10s %s "
-            (if (> hours 0)
-                (format "%2dh" hours)
-              "   ")
-            (format "%02dm" minutes))))
-
-
 ;; Rendering
 (defvar-local orrient-timers-time nil)
 
@@ -446,6 +454,15 @@ it's next occurance from UTC 0."
 (defun orrient--timers-time ()
   (or orrient-timers-time
       (orrient--timers-current-time)))
+
+(defun orrient--timers-format-eta (minutes)
+  (let ((hours (/ minutes 60))
+        (minutes (% minutes 60)))
+    (format "%10s %s "
+	    (if (> hours 0)
+	        (format "%2dh" hours)
+	      "   ")
+	    (format "%02dm" minutes))))
 
 (defun orrient--timers-heading-length ()
   (or orrient--timers-heading-length
@@ -462,26 +479,17 @@ it's next occurance from UTC 0."
                                name-lengths
                                nil))))))
 
-(defun orrient--timers-upcoming-events-widgets (meta time)
-  (let ((iter (orrient--timers-meta-iter meta time)))
-    (append
-     `((orrient-timers-countdown :time ,time ,meta))
-     (cl-loop repeat 5 collect
-              `(orrient-timers-event ,(car (iter-next iter)))))))
-
-(defun orrient--timers-header-format (time)
-  )
-
 (defun orrient--timers-entries-at-time (time)
   (mapcar
    (lambda (meta)
      (let* ((meta-name (orrient-meta-name meta))
             (meta-category (orrient-meta-category meta))
-            (next-event (orrient--timers-meta-next-event meta time)))
+            (next-event (orrient--timers-meta-next-event meta time))
+            (time-until (- (cdr next-event) time)))
        (list meta-name
              (vector meta-name
                      (cons (orrient--timers-category-name meta-category) `(id ,meta-category))
-                     (orrient-timers-event-countdown next-event time)
+                     (cons (orrient--timers-format-eta time-until) `(minutes ,time-until face ,(orrient--timers-get-countdown-face time-until)))
                      (orrient-event-name (car next-event))))))
    orrient-timers-schedule))
 
