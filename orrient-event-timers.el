@@ -364,11 +364,6 @@ Return t when ENTRY-A is before COL-B."
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
-(defface orrient-timers-event
-  '((t (:inherit outline-1)))
-  "Face for meta heading in the event timers buffer."
-  :group 'orrient)
-
 (defun orrient--timers-get-category-face (category)
   (pcase category
     ('core-tyria 'orrient-timers-category-core-tyria)
