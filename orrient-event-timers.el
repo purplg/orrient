@@ -314,53 +314,53 @@ Return t when ENTRY-A is before COL-B."
 
 
 ;; Faces
-(defface orrient-timers-meta
+(defface orrient-timers-category
   '((t (:extend t :weight bold)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-core-tyria
-  '((t (:background "#3f010c" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#3f010c" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-1
-  '((t (:background "#7b0418" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#7b0418" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-2
-  '((t (:background "#5c4a03" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#5c4a03" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-heart-of-thorns
-  '((t (:background "#515c03" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#515c03" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-3
-  '((t (:background "#4b7f40" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#4b7f40" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-path-of-fire
-  '((t (:background "#7b4704" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#7b4704" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-living-world-4
-  '((t (:background "#662a77" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#662a77" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-icebrood-saga
-  '((t (:background "#04497b" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#04497b" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
 (defface orrient-timers-category-end-of-dragons
-  '((t (:background "#0b6b75" :extend t :inherit 'orrient-timers-meta)))
+  '((t (:background "#0b6b75" :extend t :inherit 'orrient-timers-category)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
