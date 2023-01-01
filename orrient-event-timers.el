@@ -295,7 +295,7 @@ forward in time by calling `orrient-timers-forward' will snap to
 
 ;; Faces
 (defface orrient-timers-meta
-  '((t (:extend t)))
+  '((t (:extend t :weight bold)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
@@ -491,26 +491,13 @@ it's next occurance from UTC 0."
       (orrient-timers-mode))))
 
 (defun orrient--timers-printer (id cols)
-  (let ((beg   (point))
-        (x     (max tabulated-list-padding 0))
-        (ncols (length tabulated-list-format))
-        (inhibit-read-only t))
-    (if (> tabulated-list-padding 0)
-        (insert (make-string x ?\s)))
-    (let ((tabulated-list--near-rows    ; Bind it if not bound yet (Bug#25506).
-           (or (bound-and-true-p tabulated-list--near-rows)
-               (list (or (tabulated-list-get-entry (pos-bol 0))
-                         cols)
-                     cols))))
-      (dotimes (n ncols)
-        (setq x (tabulated-list-print-col n (aref cols n) x)))
-      (insert ?\n)
-      ;; Ever so slightly faster than calling `put-text-property' twice.
-      (add-text-properties
-       beg (point)
-       `(tabulated-list-id ,id
-         tabulated-list-entry ,cols
-         face ,(orrient--timers-get-category-face (plist-get (cdr (aref (cadr tabulated-list--near-rows) 1)) 'id)))))))
+  "Used for printing to the `tabulated-list'."
+  (when-let ((category-info (aref cols 1))
+             (category-name (car category-info))
+             (category-id (plist-get (cdr category-info) 'id))
+             (result (propertize category-name 'face (orrient--timers-get-category-face category-id))))
+    (setf (car (aref cols 1)) result))
+  (tabulated-list-print-entry id cols))
 
 (define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
