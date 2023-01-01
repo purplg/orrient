@@ -420,14 +420,6 @@ it's next occurance from UTC 0."
               "   ")
             (format "%02dm" minutes))))
 
-(defun orrient-timers-time-widget-value-create (_widget)
-  (let ((hours (/ orrient-timers-time 60))
-        (minutes (% orrient-timers-time 60)))
-    (insert (format "%02d:%02d UTC" hours minutes))
-    (insert (if orrient--timers-timer
-                " (Live update)"
-              " (Paused)"))))
-
 
 ;; Rendering
 (defvar-local orrient-timers-time nil)
