@@ -458,11 +458,10 @@ it's next occurance from UTC 0."
 (defun orrient--timers-format-eta (minutes)
   (let ((hours (/ minutes 60))
         (minutes (% minutes 60)))
-    (format "%10s %s "
-	    (if (> hours 0)
-	        (format "%2dh" hours)
-	      "   ")
-	    (format "%02dm" minutes))))
+    (format "%15s"
+            (if (> hours 0)
+	        (format "%dh %02dm" hours minutes)
+              (format "%02dm" minutes)))))
 
 (defun orrient--timers-heading-length ()
   (or orrient--timers-heading-length
