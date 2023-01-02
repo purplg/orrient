@@ -443,25 +443,6 @@ it's next occurance from UTC 0."
                 event-times
                 nil)))
 
-(iter-defun orrient--timers-meta-iter (meta time)
-  "Yields a cons of a orrient-event to it's next start time."
-  (let ((events (orrient-meta-events meta)))
-    (while t
-      (let* ((upcoming-events (seq-map
-                              (lambda (event)
-                                (cons event (orrient--timers-event-next event time)))
-                              events))
-             (next-event-instance (seq-reduce (lambda (upcoming-event-a upcoming-event-b)
-                                                (if (and upcoming-event-a
-                                                         (< (cdr upcoming-event-a)
-                                                            (cdr upcoming-event-b)))
-                                                    upcoming-event-a
-                                                  upcoming-event-b))
-                                             upcoming-events
-                                             nil)))
-        (iter-yield next-event-instance)
-        (setq time (cdr next-event-instance))))))
-
 
 ;; Rendering
 (defvar-local orrient-timers-time nil)
