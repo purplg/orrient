@@ -400,7 +400,7 @@ Return t when ENTRY-A comes before COL-B."
   :group 'orrient)
 
 (defun orrient--timers-get-countdown-face (minutes)
-  (cond ((< minutes 0) 'orrient-timers-countdown-now)
+  (cond ((<= minutes 0) 'orrient-timers-countdown-now)
         ((< minutes 15) 'orrient-timers-countdown-soon)
         (t 'orrient-timers-countdown-later)))
 
