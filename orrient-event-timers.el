@@ -400,8 +400,8 @@ Return t when ENTRY-A comes before COL-B."
   :group 'orrient)
 
 (defun orrient--timers-get-countdown-face (minutes)
-  (cond ((< minutes 10) 'orrient-timers-countdown-now)
-        ((< minutes 20) 'orrient-timers-countdown-soon)
+  (cond ((< minutes 0) 'orrient-timers-countdown-now)
+        ((< minutes 15) 'orrient-timers-countdown-soon)
         (t 'orrient-timers-countdown-later)))
 
 
@@ -417,11 +417,23 @@ Return t when ENTRY-A comes before COL-B."
       (setq next-start (+ offset (* (1+ index) frequency))))
     next-start))
 
+(defun orrient--timers-event-now (event time)
+  "Returns next event occurance in minutes offset from UTC 0."
+  (let* ((offset (orrient-event-offset event))
+         (frequency (orrient-event-frequency event))
+         (index (/ time frequency))
+         (start (+ offset (* index frequency)))
+         (end (+ start (orrient-event-length event))))
+    (when (and (>= time start)
+               (< time end))
+      start)))
+
 (defun orrient--timers-meta-next-event (meta time)
   "Returns a cons of the next `orrient-event' and minutes of
 it's next occurance from UTC 0."
   (let ((event-times (mapcar (lambda (event)
-                               (cons event (orrient--timers-event-next event time)))
+                               (cons event (or (orrient--timers-event-now event time)
+                                               (orrient--timers-event-next event time))))
                              (orrient-meta-events meta))))
     (seq-reduce (lambda (a b)
                   (if (and a
@@ -543,7 +555,7 @@ it's next occurance from UTC 0."
   (setq tabulated-list-format [("Meta" 21 t)
                                ("Category" 21 orrient--timers-category-sort)
                                ("Time until" 15 orrient--timers-time-remaining-sort)
-                               ("Next" 21 t)])
+                               ("Events" 21 t)])
   (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
   (tabulated-list-init-header)
   (tabulated-list-print)
