@@ -384,11 +384,6 @@ Return t when ENTRY-A comes before COL-B."
     ('end-of-dragons 'orrient-timers-category-end-of-dragons)))
 
 ;; Countdown faces
-(defface orrient-timers-countdown-later
-  '((t ()))
-  "Orrient face for time remaining when an event is not happening soon."
-  :group 'orrient)
-
 (defface orrient-timers-countdown-now
   '((t (:inherit 'error)))
   "Orrient face for time remaining when an event is happening now."
@@ -397,6 +392,11 @@ Return t when ENTRY-A comes before COL-B."
 (defface orrient-timers-countdown-soon
   '((t (:inherit 'warning)))
   "Orrient face for time remaining when an event is happening soon."
+  :group 'orrient)
+
+(defface orrient-timers-countdown-later
+  '((t ()))
+  "Orrient face for time remaining when an event is not happening soon."
   :group 'orrient)
 
 (defun orrient--timers-get-countdown-face (minutes)
