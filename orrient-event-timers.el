@@ -488,7 +488,7 @@ it's next occurance from UTC 0."
        (list meta-name
              (vector meta-name
                      (cons (orrient--timers-category-name meta-category) `(orrient-category-id ,meta-category))
-                     (cons (orrient--timers-format-eta time-until) `(orrient-minutes-until ,time-until face ,(orrient--timers-get-countdown-face time-until)))
+                     (cons time-until `(orrient-minutes-until ,time-until face ,(orrient--timers-get-countdown-face time-until)))
                      (orrient-event-name (car next-event))))))
    orrient-timers-schedule))
 
@@ -514,11 +514,20 @@ it's next occurance from UTC 0."
 
 (defun orrient--timers-printer (id cols)
   "Used for printing to the `tabulated-list'."
-  (when-let ((category-info (aref cols 1))
-             (category-name (car category-info))
-             (category-id (plist-get (cdr category-info) 'orrient-category-id))
-             (result (propertize category-name 'face (orrient--timers-get-category-face category-id))))
-    (setf (car (aref cols 1)) result))
+  (when-let ((index 1)
+             (column (aref cols index))
+             (name (car column))
+             (id (plist-get (cdr column) 'orrient-category-id)))
+    (setf (car (aref cols index))
+          (propertize name
+                      'face (orrient--timers-get-category-face id))))
+
+  (when-let ((index 2)
+             (column (aref cols index))
+             (time-until (car column)))
+    (setf (car (aref cols index))
+          (orrient--timers-format-eta time-until)))
+
   (tabulated-list-print-entry id cols))
 
 (define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Event Timers"
