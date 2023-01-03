@@ -116,6 +116,11 @@ forward in time by calling `orrient-timers-forward' will snap to
   length
   frequency)
 
+(cl-defstruct orrient-event-instance
+  event
+  start
+  end)
+
 (cl-defstruct orrient-meta
   name
   category
@@ -280,11 +285,11 @@ Return t when ENTRY-A is before COL-B."
     ('icebrood-saga "The Icebrood Saga")
     ('end-of-dragons "End of Dragons")))
 
-(defun orrient--timers-time-remaining-sort (entry-a entry-b)
+(defun orrient--timers-time-remaining-sort (event-column entry-a entry-b)
   "Predicate for `sort' that sorts events by how soon they will occur next.
 Return t when ENTRY-A comes before COL-B."
-  (let ((category-a-minutes (plist-get (cdr (aref (nth 1 entry-a) 2)) 'orrient-minutes-until))
-        (category-b-minutes (plist-get (cdr (aref (nth 1 entry-b) 2)) 'orrient-minutes-until)))
+  (let ((category-a-minutes (orrient-event-instance-start (plist-get (cdr (aref (nth 1 entry-a) event-column)) 'orrient-event-instance)))
+        (category-b-minutes (orrient-event-instance-start (plist-get (cdr (aref (nth 1 entry-b) event-column)) 'orrient-event-instance))))
     (< category-a-minutes category-b-minutes)))
 
 
@@ -407,60 +412,62 @@ Return t when ENTRY-A comes before COL-B."
 
 ;; Event prediction
 (defun orrient--timers-event-next (event time)
-  "Returns next event occurance in minutes offset from UTC 0."
+  "Returns the next `orrient-event-instance' of EVENT starting from
+TIME in minutes from UTC 0."
+  (let* ((offset (orrient-event-offset event))
+         (frequency (orrient-event-frequency event))
+         (length (orrient-event-length event))
+         (start-time (+ offset (* (/ time frequency) frequency)))
+         (end-time (+ start-time length)))
+    (while (<= end-time time)
+      (setq start-time (+ start-time frequency))
+      (setq end-time (+ start-time length)))
+    (make-orrient-event-instance :event event
+                                 :start start-time
+                                 :end end-time)))
+
+(iter-defun orrient--timers-event-iter (event time &optional reset-new-day)
+  "Returns next start time `orrient-event', in minutes, from UTC 0."
   (let* ((offset (orrient-event-offset event))
          (frequency (orrient-event-frequency event))
          (index (/ time frequency))
-         (next-start (+ offset (* index frequency))))
-    (while (<= next-start time)
-      (setq index (1+ index))
-      (setq next-start (+ offset (* index frequency))))
-    next-start))
+         (start-time (+ offset (* index frequency))))
 
-(defun orrient--timers-event-now (event time)
-  "Returns next event occurance in minutes offset from UTC 0."
-  (let* ((offset (orrient-event-offset event))
-         (frequency (orrient-event-frequency event))
-         (index (/ time frequency))
-         (start (+ offset (* index frequency)))
-         (end (+ start (orrient-event-length event))))
-    (when (and (>= time start)
-               (< time end))
-      start)))
+    ; If event has passed, skip to next occurance.
+    (while (> time start-time)
+      (setq index (1+ index)))
 
-(defun orrient--timers-meta-next-event (meta time)
-  "Returns a cons of the next `orrient-event' and minutes of
-it's next occurance from UTC 0."
-  (let ((event-times (mapcar (lambda (event)
-                               (cons event (or (orrient--timers-event-now event time)
-                                               (orrient--timers-event-next event time))))
-                             (orrient-meta-events meta))))
-    (seq-reduce (lambda (a b)
-                  (if (and a
-                       (< (cdr a) (cdr b)))
-                      a
-                    b))
-                event-times
-                nil)))
+    (while t
+      (setq start-time (+ offset (* index frequency)))
+
+      (when (and reset-new-day
+                 (>= start-time 1440))
+        (setq index 0)
+        (setq start-time offset))
+
+      (iter-yield (make-orrient-event-instance :event event
+                                               :start start-time
+                                               :end (+ start-time (orrient-event-length event))))
+      (setq index (1+ index)))))
 
 (iter-defun orrient--timers-meta-iter (meta time)
-  "Returns a cons of the next `orrient-event' and minutes of it's
-next occurance from UTC 0."
+  "Returns a `orrient-event-instance' of the next `orrient-event' to occur."
   (let ((events (orrient-meta-events meta)))
     (while t
       (let* ((event-times (mapcar (lambda (event)
-                                    (cons event (orrient--timers-event-next event time)))
+                                    (orrient--timers-event-next event time))
                                   events))
              (next-event (seq-reduce
                           (lambda (a b)
                             (if (and a
-                                     (< (cdr a) (cdr b)))
+                                     (< (orrient-event-instance-start a)
+                                        (orrient-event-instance-start b)))
                                 a
                               b))
                           event-times
                           nil)))
         (iter-yield next-event)
-        (setq time (cdr next-event))))))
+        (setq time (orrient-event-instance-end next-event))))))
 
 
 ;; Rendering
@@ -503,10 +510,11 @@ next occurance from UTC 0."
                                nil))))))
 
 (defun orrient--timers-event-entry (event-instance time)
-  (let ((event (car event-instance))
-        (minutes-until (- (cdr event-instance) time)))
+  (let ((event (orrient-event-instance-event event-instance))
+        (minutes-until (- (orrient-event-instance-start event-instance) time)))
     (cons (orrient--timers-format-event (orrient-event-name event) minutes-until)
-          `(face ,(orrient--timers-get-countdown-face minutes-until)))))
+          `(orrient-event-instance ,event-instance
+            face ,(orrient--timers-get-countdown-face minutes-until)))))
 
 (defun orrient--timers-entries-at-time (time)
   (mapcar
@@ -563,12 +571,11 @@ next occurance from UTC 0."
                                        (orrient-timers-open)))
 
   (setq tabulated-list-printer #'orrient--timers-printer)
-  ;; (cl-loop repeat 5 collect)
-  (setq tabulated-list-format [("Meta" 21 t)
-                               ("Category" 21 orrient--timers-category-sort)
-                               ("Current" 21 t)
-                               ("Next" 21 t)
-                               ("Later" 21 t)])
+  (setq tabulated-list-format (vector '("Meta" 21 t)
+                                      '("Category" 21 orrient--timers-category-sort)
+                                      `("Current" 21 ,(apply-partially 'orrient--timers-time-remaining-sort 2))
+                                      `("Next" 21 ,(apply-partially 'orrient--timers-time-remaining-sort 3))
+                                      `("Later" 21 ,(apply-partially 'orrient--timers-time-remaining-sort 4))))
   (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
   (tabulated-list-init-header)
   (tabulated-list-print)
