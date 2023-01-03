@@ -443,6 +443,25 @@ it's next occurance from UTC 0."
                 event-times
                 nil)))
 
+(iter-defun orrient--timers-meta-iter (meta time)
+  "Returns a cons of the next `orrient-event' and minutes of it's
+next occurance from UTC 0."
+  (let ((events (orrient-meta-events meta)))
+    (while t
+      (let* ((event-times (mapcar (lambda (event)
+                                    (cons event (orrient--timers-event-next event time)))
+                                  events))
+             (next-event (seq-reduce
+                          (lambda (a b)
+                            (if (and a
+                                     (< (cdr a) (cdr b)))
+                                a
+                              b))
+                          event-times
+                          nil)))
+        (iter-yield next-event)
+        (setq time (cdr next-event))))))
+
 
 ;; Rendering
 (defvar-local orrient-timers-time nil)
@@ -458,10 +477,15 @@ it's next occurance from UTC 0."
 (defun orrient--timers-format-eta (minutes)
   (let ((hours (/ minutes 60))
         (minutes (% minutes 60)))
-    (format "%15s"
-            (if (> hours 0)
-	        (format "%dh %02dm" hours minutes)
-              (format "%02dm" minutes)))))
+    ;; 6 is select here because the longest possible time between events is 2
+    ;; hours and "2h 00m" is 6 characters. So we normalize all timestamps to 6
+    ;; characters.
+    (format "%6s" (if (> hours 0)
+	              (format "%dh %02dm" hours minutes)
+                    (format "%02dm" minutes)))))
+
+(defun orrient--timers-format-event (event-name minutes-until)
+  (format "%s %s" (orrient--timers-format-eta minutes-until) event-name))
 
 (defun orrient--timers-heading-length ()
   (or orrient--timers-heading-length
@@ -478,18 +502,24 @@ it's next occurance from UTC 0."
                                name-lengths
                                nil))))))
 
+(defun orrient--timers-event-entry (event-instance time)
+  (let ((event (car event-instance))
+        (minutes-until (- (cdr event-instance) time)))
+    (cons (orrient--timers-format-event (orrient-event-name event) minutes-until)
+          `(face ,(orrient--timers-get-countdown-face minutes-until)))))
+
 (defun orrient--timers-entries-at-time (time)
   (mapcar
    (lambda (meta)
      (let* ((meta-name (orrient-meta-name meta))
             (meta-category (orrient-meta-category meta))
-            (next-event (orrient--timers-meta-next-event meta time))
-            (time-until (- (cdr next-event) time)))
+            (meta-iter (orrient--timers-meta-iter meta time)))
        (list meta-name
              (vector meta-name
                      (cons (orrient--timers-category-name meta-category) `(orrient-category-id ,meta-category))
-                     (cons time-until `(orrient-minutes-until ,time-until face ,(orrient--timers-get-countdown-face time-until)))
-                     (orrient-event-name (car next-event))))))
+                     (orrient--timers-event-entry (iter-next meta-iter) time)
+                     (orrient--timers-event-entry (iter-next meta-iter) time)
+                     (orrient--timers-event-entry (iter-next meta-iter) time)))))
    orrient-timers-schedule))
 
 (defun orrient--timers-update (time)
@@ -521,13 +551,6 @@ it's next occurance from UTC 0."
     (setf (car (aref cols index))
           (propertize name
                       'face (orrient--timers-get-category-face id))))
-
-  (when-let ((index 2)
-             (column (aref cols index))
-             (time-until (plist-get (cdr column) 'orrient-minutes-until)))
-    (setf (car (aref cols index))
-          (orrient--timers-format-eta time-until)))
-
   (tabulated-list-print-entry id cols))
 
 (define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Event Timers"
@@ -543,8 +566,9 @@ it's next occurance from UTC 0."
   ;; (cl-loop repeat 5 collect)
   (setq tabulated-list-format [("Meta" 21 t)
                                ("Category" 21 orrient--timers-category-sort)
-                               ("Time until" 15 orrient--timers-time-remaining-sort)
-                               ("Events" 21 t)])
+                               ("Current" 21 t)
+                               ("Next" 21 t)
+                               ("Later" 21 t)])
   (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
   (tabulated-list-init-header)
   (tabulated-list-print)
