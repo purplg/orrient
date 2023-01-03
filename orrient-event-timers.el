@@ -322,7 +322,7 @@ Return t when ENTRY-A comes before COL-B."
 
 ;; Faces
 (defface orrient-timers-category
-  '((t (:extend t :weight bold)))
+  '((t (:extend t)))
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
