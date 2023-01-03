@@ -524,7 +524,7 @@ it's next occurance from UTC 0."
 
   (when-let ((index 2)
              (column (aref cols index))
-             (time-until (car column)))
+             (time-until (plist-get (cdr column) 'orrient-minutes-until)))
     (setf (car (aref cols index))
           (orrient--timers-format-eta time-until)))
 
