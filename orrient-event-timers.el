@@ -390,12 +390,12 @@ Return t when ENTRY-A comes before COL-B."
   :group 'orrient)
 
 (defface orrient-timers-countdown-now
-  '((t (:background "#7b0418" :weight bold :inherit 'orrient-timers-countdown-later)))
+  '((t (:inherit 'error)))
   "Orrient face for time remaining when an event is happening now."
   :group 'orrient)
 
 (defface orrient-timers-countdown-soon
-  '((t (:background "#515c03" :inherit 'orrient-timers-countdown-later)))
+  '((t (:inherit 'warning)))
   "Orrient face for time remaining when an event is happening soon."
   :group 'orrient)
 
