@@ -63,7 +63,7 @@ forward in time by calling `orrient-timers-forward' will snap to
     (orrient--timers-update
      (% (if orrient-timers-snap-to-step
             (* (1+ (/ time step)) step)
-          (- time step)) 1440))))
+          (+ time step)) 1440))))
 
 (defun orrient-timers-backward (&optional step)
   (interactive)
