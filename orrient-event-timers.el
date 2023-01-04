@@ -56,6 +56,8 @@ forward in time by calling `orrient-timers-forward' will snap to
 
 ;; User functions
 (defun orrient-timers-forward (&optional step)
+  "Skip forward in time by `orrient-timers-skip-step'.
+Specify STEP to forward by that amount instead."
   (interactive)
   (orrient--timers-timer-cancel)
   (let ((step (or step orrient-timers-skip-step))
@@ -66,6 +68,8 @@ forward in time by calling `orrient-timers-forward' will snap to
           (+ time step)) 1440))))
 
 (defun orrient-timers-backward (&optional step)
+  "Skip backward in time by `orrient-timers-skip-step'.
+Specify STEP to forward by that amount instead."
   (interactive)
   (orrient--timers-timer-cancel)
   (let ((step (or step orrient-timers-skip-step))
@@ -76,11 +80,14 @@ forward in time by calling `orrient-timers-forward' will snap to
        (- time step)))))
 
 (defun orrient-timers-now (&rest _)
+  "Jump to the current system time."
   (interactive)
   (orrient--timers-timer-start)
   (orrient--timers-update (orrient--timers-current-time)))
 
 (defun orrient-timers-goto (time)
+  "Jump to a specified time.
+TIME is in ISO 8601 format as specified by `parse-time-string'"
   (interactive
    (let ((user-time (parse-time-string (format "%s" (read-from-minibuffer "Time (UTC): ")))))
      (list (+ (* (decoded-time-hour user-time) 60)
@@ -111,17 +118,20 @@ forward in time by calling `orrient-timers-forward' will snap to
                                (pop length)))
                     (frequency (+ (* 60 (pop frequency))
                                   (pop frequency))))))
+  "A generic event with a repeating schedule."
   name
   offset
   length
   frequency)
 
 (cl-defstruct orrient-event-instance
+  "A specific occurance of `orrient-event' with a start and end time"
   event
   start
   end)
 
 (cl-defstruct orrient-meta
+  "A collection of events to create a meta schedule."
   name
   category
   events)
@@ -274,6 +284,7 @@ Return t when ENTRY-A is before COL-B."
        (cl-position category-b-id orrient--timers-category-order))))
 
 (defun orrient--timers-category-name (category)
+  "Convert the CATEGORY symbol into a human-readable string."
   (pcase category
     ('core-tyria "Core Tyria")
     ('living-world-1 "Living World S1")
@@ -294,9 +305,12 @@ Return t when ENTRY-A comes before COL-B."
 
 
 ;; Timers
-(defvar orrient--timers-timer nil)
+(defvar orrient--timers-timer nil
+  "Instance of the refresh timer.
+If non-nil, then a `run-with-timer' timer is active.")
 
 (defun orrient--timers-timer-start ()
+  "Start the live update timer at the top of every minute."
   (orrient--timers-timer-cancel)
   (setq orrient--timers-timer
         (run-with-timer (- 60 (decoded-time-second (decode-time nil t nil)))
@@ -306,6 +320,7 @@ Return t when ENTRY-A comes before COL-B."
                            (orrient--timers-update (orrient--timers-current-time)))))))
 
 (defun orrient--timers-timer-cancel ()
+  "Stop the live update timer if it's running."
   (when orrient--timers-timer
     (cancel-timer orrient--timers-timer)
     (setq orrient--timers-timer nil)))
@@ -377,6 +392,7 @@ Return t when ENTRY-A comes before COL-B."
   :group 'orrient)
 
 (defun orrient--timers-get-category-face (category)
+  "Convert the CATEGORY symbol into a face."
   (pcase category
     ('core-tyria 'orrient-timers-category-core-tyria)
     ('living-world-1 'orrient-timers-category-living-world-1)
@@ -471,17 +487,22 @@ TIME in minutes from UTC 0."
 
 
 ;; Rendering
-(defvar-local orrient-timers-time nil)
+(defvar-local orrient-timers-time nil
+  "The current time rendered in the table.")
 
-(defvar-local orrient--timers-heading-length nil)
+(defvar-local orrient--timers-heading-length nil
+  "Length of the longest meta name.")
 
-(defvar-local orrient--timers-event-length 20)
+(defvar-local orrient--timers-event-length 20
+  "Length of the longest event name.")
 
 (defun orrient--timers-time ()
+  "Returns the current time being rendered."
   (or orrient-timers-time
       (orrient--timers-current-time)))
 
 (defun orrient--timers-format-eta (minutes)
+  "Format an ETA shown on an event of its next occurance."
   (let ((hours (/ minutes 60))
         (minutes (% minutes 60)))
     ;; 6 is select here because the longest possible time between events is 2
@@ -492,9 +513,11 @@ TIME in minutes from UTC 0."
                     (format "%02dm" minutes)))))
 
 (defun orrient--timers-format-event (event-name minutes-until)
+  "Format an event of its next occurance."
   (format "%s %s" (orrient--timers-format-eta minutes-until) event-name))
 
 (defun orrient--timers-heading-length ()
+  "Calculate the longest meta name length."
   (or orrient--timers-heading-length
       (setq orrient--timers-heading-length
             (let ((name-lengths (mapcar (lambda (meta)
@@ -510,6 +533,10 @@ TIME in minutes from UTC 0."
                                nil))))))
 
 (defun orrient--timers-event-entry (event-instance time)
+  "Generate an event entry for a tabulated list.
+EVENT-INSTANCE is the cl-struct `orrient-event-instance.'
+
+TIME is used to calculate the eta for EVENT-INSTANCE."
   (let ((event (orrient-event-instance-event event-instance))
         (minutes-until (- (orrient-event-instance-start event-instance) time)))
     (cons (orrient--timers-format-event (orrient-event-name event) minutes-until)
@@ -517,6 +544,7 @@ TIME in minutes from UTC 0."
             face ,(orrient--timers-get-countdown-face minutes-until)))))
 
 (defun orrient--timers-entries (time)
+  "Returns all entries in tabulated list at TIME."
   (mapcar
    (lambda (meta)
      (let* ((meta-name (orrient-meta-name meta))
@@ -531,11 +559,13 @@ TIME in minutes from UTC 0."
    orrient-timers-schedule))
 
 (defun orrient--timers-update (time)
+  "Update the timers at TIME."
   (setq orrient-timers-time time)
   (setq tabulated-list-entries (orrient--timers-entries time))
   (tabulated-list-print t nil))
 
 (defun orrient-timers-open ()
+  "Open the event timers buffer."
   (interactive)
   (let* ((buffer (get-buffer-create orrient-timers-buffer))
          (window (get-buffer-window buffer)))
