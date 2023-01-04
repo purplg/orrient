@@ -516,7 +516,7 @@ TIME in minutes from UTC 0."
           `(orrient-event-instance ,event-instance
             face ,(orrient--timers-get-countdown-face minutes-until)))))
 
-(defun orrient--timers-entries-at-time (time)
+(defun orrient--timers-entries (time)
   (mapcar
    (lambda (meta)
      (let* ((meta-name (orrient-meta-name meta))
@@ -532,7 +532,7 @@ TIME in minutes from UTC 0."
 
 (defun orrient--timers-update (time)
   (setq orrient-timers-time time)
-  (setq tabulated-list-entries (orrient--timers-entries-at-time time))
+  (setq tabulated-list-entries (orrient--timers-entries time))
   (tabulated-list-print t nil))
 
 (defun orrient-timers-open ()
