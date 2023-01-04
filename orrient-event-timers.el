@@ -285,7 +285,7 @@ Return t when ENTRY-A is before COL-B."
     ('icebrood-saga "The Icebrood Saga")
     ('end-of-dragons "End of Dragons")))
 
-(defun orrient--timers-time-remaining-sort (event-column entry-a entry-b)
+(defun orrient--timers-event-instance-sort (event-column entry-a entry-b)
   "Predicate for `sort' that sorts events by how soon they will occur next.
 Return t when ENTRY-A comes before COL-B."
   (let ((category-a-minutes (orrient-event-instance-start (plist-get (cdr (aref (nth 1 entry-a) event-column)) 'orrient-event-instance)))
@@ -533,7 +533,7 @@ TIME in minutes from UTC 0."
 (defun orrient--timers-update (time)
   (setq orrient-timers-time time)
   (setq tabulated-list-entries (orrient--timers-entries-at-time time))
-  (tabulated-list-print t t))
+  (tabulated-list-print t nil))
 
 (defun orrient--timers-render-buffer-at-time (time)
   (when (< time 0)
@@ -573,9 +573,9 @@ TIME in minutes from UTC 0."
   (setq tabulated-list-printer #'orrient--timers-printer)
   (setq tabulated-list-format (vector '("Meta" 21 t)
                                       '("Category" 21 orrient--timers-category-sort)
-                                      `("Current" 21 ,(apply-partially 'orrient--timers-time-remaining-sort 2))
-                                      `("Next" 21 ,(apply-partially 'orrient--timers-time-remaining-sort 3))
-                                      `("Later" 21 ,(apply-partially 'orrient--timers-time-remaining-sort 4))))
+                                      `("Current" 21 ,(apply-partially #'orrient--timers-event-instance-sort 2))
+                                      `("Next" 21 ,(apply-partially #'orrient--timers-event-instance-sort 3))
+                                      `("Later" 21 ,(apply-partially #'orrient--timers-event-instance-sort 4))))
   (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
   (tabulated-list-init-header)
   (tabulated-list-print)
