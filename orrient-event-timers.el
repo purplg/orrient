@@ -78,7 +78,7 @@ forward in time by calling `orrient-timers-forward' will snap to
 (defun orrient-timers-now (&rest _)
   (interactive)
   (orrient--timers-timer-start)
-  (orrient--timers-render-buffer-at-time (orrient--timers-current-time)))
+  (orrient--timers-update (orrient--timers-current-time)))
 
 (defun orrient-timers-goto (time)
   (interactive
@@ -86,7 +86,7 @@ forward in time by calling `orrient-timers-forward' will snap to
      (list (+ (* (decoded-time-hour user-time) 60)
               (decoded-time-minute user-time)))))
   (orrient--timers-timer-cancel)
-  (orrient--timers-render-buffer-at-time time))
+  (orrient--timers-update time))
 
 (defun orrient-timers-open ()
   (interactive)
@@ -568,7 +568,7 @@ TIME in minutes from UTC 0."
   :abbrev-table nil
   :interactive t
   (setq-local revert-buffer-function (lambda (&rest _)
-                                       (orrient-timers-open)))
+                                       (orrient-timers-now)))
 
   (setq tabulated-list-printer #'orrient--timers-printer)
   (setq tabulated-list-format (vector '("Meta" 21 t)
@@ -576,7 +576,7 @@ TIME in minutes from UTC 0."
                                       `("Current" 21 ,(apply-partially #'orrient--timers-event-instance-sort 2))
                                       `("Next" 21 ,(apply-partially #'orrient--timers-event-instance-sort 3))
                                       `("Later" 21 ,(apply-partially #'orrient--timers-event-instance-sort 4))))
-  (setq tabulated-list-entries (orrient--timers-entries-at-time (orrient--timers-time)))
+  (orrient-timers-now)
   (tabulated-list-init-header)
   (tabulated-list-print)
   (orrient--timers-timer-start))
