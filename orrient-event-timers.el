@@ -95,16 +95,6 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
   (orrient--timers-timer-cancel)
   (orrient--timers-update time))
 
-(defun orrient-timers-open ()
-  (interactive)
-  (if orrient-timers-time
-      (orrient-timers-goto orrient-timers-time)
-    (orrient-timers-now))
-  (let* ((buffer (get-buffer orrient-timers-buffer))
-         (window (get-buffer-window buffer)))
-    (pop-to-buffer buffer)
-    (set-window-dedicated-p window t)))
-
 
 ;; Data
 (cl-defstruct
