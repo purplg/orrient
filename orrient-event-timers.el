@@ -535,12 +535,6 @@ TIME in minutes from UTC 0."
   (setq tabulated-list-entries (orrient--timers-entries-at-time time))
   (tabulated-list-print t nil))
 
-(defun orrient--timers-render-buffer-at-time (time)
-  (when (< time 0)
-    (setq time (+ time 1440)))
-  (setq orrient-timers-time (% time 1440))
-  (orrient--timers-render-buffer))
-
 (defun orrient-timers-open ()
   (interactive)
   (let* ((buffer (get-buffer-create orrient-timers-buffer))
