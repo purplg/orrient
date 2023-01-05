@@ -594,4 +594,6 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (tabulated-list-init-header)
   (tabulated-list-print))
 
+(provide 'orrient-event-timers)
+
 ;;; orrient-event-timers.el ends here
