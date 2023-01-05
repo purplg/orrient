@@ -577,7 +577,7 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
 
 (define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
-  :group 'orrient
+  :group 'orrient-timers
   :syntax-table nil
   :abbrev-table nil
   :interactive t
