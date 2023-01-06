@@ -164,6 +164,7 @@ If non-nil, then a `run-with-timer' timer is active.")
 
 
 ;; Faces
+;;; Category
 (defface orrient-timers-category
   '((t (:extend t)))
   "Face for meta heading in the event timers buffer."
@@ -227,7 +228,7 @@ If non-nil, then a `run-with-timer' timer is active.")
     ('icebrood-saga 'orrient-timers-category-icebrood-saga)
     ('end-of-dragons 'orrient-timers-category-end-of-dragons)))
 
-;; Countdown faces
+;;; Countdown
 (defface orrient-timers-countdown-now
   '((t (:inherit 'error)))
   "Orrient face for time remaining when an event is happening now."
