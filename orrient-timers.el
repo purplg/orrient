@@ -276,12 +276,16 @@ TIME in minutes from UTC 0."
   "Returns next start time `orrient-event', in minutes, from UTC 0."
   (let* ((offset (orrient-event-offset event))
          (frequency (orrient-event-frequency event))
+         (length (orrient-event-length event))
          (index (/ time frequency))
-         (start-time (+ offset (* index frequency))))
+         (start-time (+ offset (* index frequency)))
+         (end-time (+ start-time length)))
 
     ; If event has passed, skip to next occurance.
-    (while (> time start-time)
-      (setq index (1+ index)))
+    (while (<= end-time time)
+      (setq index (1+ index))
+      (setq start-time (+ offset (* index frequency)))
+      (setq end-time (+ start-time length)))
 
     (while t
       (setq start-time (+ offset (* index frequency)))
@@ -291,9 +295,10 @@ TIME in minutes from UTC 0."
         (setq index 0)
         (setq start-time offset))
 
-      (iter-yield (make-orrient-event-instance :event event
-                                               :start start-time
-                                               :end (+ start-time (orrient-event-length event))))
+      (iter-yield (make-orrient-event-instance
+                   :event event
+                   :start start-time
+                   :end (+ start-time (orrient-event-length event))))
       (setq index (1+ index)))))
 
 (iter-defun orrient-timers--meta-iter (meta time)
