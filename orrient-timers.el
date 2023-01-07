@@ -96,7 +96,6 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
   (orrient-timers--timer-cancel)
   (orrient-timers--update time))
 
-
 
 ;; Sorting
 (defvar orrient-timers--category-order
