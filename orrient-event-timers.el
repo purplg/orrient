@@ -250,6 +250,12 @@ If non-nil, then a `run-with-timer' timer is active.")
         (t 'orrient-timers-countdown-later)))
 
 
+;; Callbacks
+(defun orrient-timers--button-meta (button)
+  (let ((meta (button-get button 'orrient-meta)))
+    (orrient-meta-open meta)))
+
+
 ;; Event prediction
 (defun orrient-timers--event-next (event time)
   "Returns the next `orrient-event-instance' of EVENT starting from
@@ -375,7 +381,8 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
             (meta-category (orrient-meta-category meta))
             (meta-iter (orrient-timers--meta-iter meta time)))
        (list meta-name
-             (vector meta-name
+             (vector (cons meta-name `(action orrient-timers--button-meta
+                                       orrient-meta ,meta))
                      (cons (orrient--meta-category-name meta-category) `(orrient-category-id ,meta-category))
                      (orrient-timers--event-entry (iter-next meta-iter) time)
                      (orrient-timers--event-entry (iter-next meta-iter) time)
@@ -391,10 +398,8 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
 (defun orrient-timers-open ()
   "Open the event timers buffer."
   (interactive)
-  (let* ((buffer (get-buffer-create orrient-timers-buffer))
-         (window (get-buffer-window buffer)))
-    (pop-to-buffer buffer)
-    (set-window-dedicated-p window t)
+  (let* ((buffer (get-buffer-create orrient-timers-buffer)))
+    (orrient--display-buffer buffer)
     (with-current-buffer buffer
       (orrient-timers-mode))))
 
