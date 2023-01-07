@@ -1,4 +1,4 @@
-;;; orrient-event-timers.el --- Event Timers in GW2 -*- lexical-binding: t; -*-
+;;; orrient-timers.el --- Event Timers in GW2 -*- lexical-binding: t; -*-
 
 ;; Homepage: https://github.com/purplg/orrient
 ;; SPDX-License-Identifier: MIT
@@ -14,7 +14,7 @@
 
 (require 'orrient-data)
 
-(defvar orrient-timers-buffer "*orrient-event-timers*")
+(defvar orrient-timers-buffer "*orrient-timers*")
 
 (defmacro orrient-timers--with-buffer (&rest body)
   "Like `with-current-buffer' but with `orrient-timers-buffer'.
@@ -395,6 +395,7 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (setq tabulated-list-entries (orrient-timers--entries time))
   (tabulated-list-print t nil))
 
+;;;###autoload
 (defun orrient-timers-open ()
   "Open the event timers buffer."
   (interactive)
@@ -433,6 +434,6 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (tabulated-list-init-header)
   (tabulated-list-print))
 
-(provide 'orrient-event-timers)
+(provide 'orrient-timers)
 
-;;; orrient-event-timers.el ends here
+;;; orrient-timers.el ends here
