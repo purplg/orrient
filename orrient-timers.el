@@ -43,7 +43,7 @@ BODY is evaluated with `orrient-timers-buffer'"
     map)
   "Keymap for `orrient-timers-mode'.")
 
-(defcustom orrient-timers-skip-step 15
+(defcustom orrient-timers-skip-step 5
   "Amount of time to skip when stepping forward or backwards in
 time.")
 
