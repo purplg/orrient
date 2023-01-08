@@ -1,4 +1,6 @@
 ;;; orrient-meta.el --- Meta information for GW2 -*- lexical-binding: t; -*-
+(require 'cl-lib)
+
 (require 'orrient-data)
 (require 'orrient-timers)
 

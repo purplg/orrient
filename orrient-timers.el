@@ -10,6 +10,7 @@
 ;; Configuration
 
 ;;; Code:
+(require 'cl-lib)
 (require 'generator)
 
 (require 'orrient)
