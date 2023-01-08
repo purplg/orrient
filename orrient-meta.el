@@ -25,7 +25,8 @@ META is a `orrient-meta' struct that is to be rendered."
      (list (cdr (assoc (completing-read "Meta: " completions) completions)))))
   (let* ((buffer (get-buffer-create (orrient-meta--buffer-name meta))))
     (orrient-meta--with-buffer meta
-                               (orrient-meta--render meta (orrient-timers--current-time)))
+                               (orrient-meta--render meta (orrient-timers--current-time))
+                               (orrient-meta-mode))
     (orrient--display-buffer buffer)))
 
 (defun orrient-meta--render-event (instance time)

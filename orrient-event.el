@@ -25,9 +25,9 @@ EVENT is a `orrient-event' struct that is to be rendered."
      (list (cdr (assoc (completing-read "Event: " completions) completions)))))
   (let* ((buffer (get-buffer-create (orrient-event--buffer-name event))))
     (orrient--display-buffer buffer)
-    (orrient-event--with-buffer
-     event
-     (orrient-event--render event (orrient-timers--current-time)))))
+    (orrient-event--with-buffer event
+                                (orrient-event--render event (orrient-timers--current-time))
+                                (orrient-event-mode))))
 
 (defun orrient-event--format-eta (minutes)
   "Format an ETA shown on an event of its next occurance."
