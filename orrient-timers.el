@@ -95,6 +95,14 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
   (orrient-timers--timer-cancel)
   (orrient-timers--update time))
 
+;;;###autoload
+(defun orrient-timers-open (&optional interactive)
+  "Open the event timers buffer."
+  (interactive "p")
+  (orrient--display-buffer
+   (orrient-timers--with-buffer (orrient-timers-mode))
+   (not interactive)))
+
 
 ;; Sorting
 (defun orrient-timers--schedule-sort (entry-a entry-b)
@@ -398,14 +406,6 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (setq orrient-timers-time time)
   (setq tabulated-list-entries (orrient-timers--entries time))
   (tabulated-list-print t nil))
-
-;;;###autoload
-(defun orrient-timers-open (&optional interactive)
-  "Open the event timers buffer."
-  (interactive "p")
-  (orrient--display-buffer
-   (orrient-timers--with-buffer (orrient-timers-mode))
-   (not interactive)))
 
 (define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Timers"
   "View Guild Wars 2 Event Timers."
