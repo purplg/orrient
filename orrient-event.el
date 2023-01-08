@@ -14,6 +14,12 @@ BODY is evaluated with `orrient-event-buffer'"
     (with-current-buffer buffer
       ,@body)))
 
+(defvar orrient-event-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") #'orrient--quit)
+    map)
+  "Keymap for `orrient-event-mode'.")
+
 ;;;###autoload
 (defun orrient-event-open (event)
   "Open a GW2 event buffer.
@@ -24,10 +30,11 @@ EVENT is a `orrient-event' struct that is to be rendered."
                                (flatten-list (mapcar #'orrient-meta-events orrient-schedule)))))
      (list (cdr (assoc (completing-read "Event: " completions) completions)))))
   (let* ((buffer (get-buffer-create (orrient-event--buffer-name event))))
-    (orrient--display-buffer buffer)
     (orrient-event--with-buffer event
-                                (orrient-event--render event (orrient-timers--current-time))
-                                (orrient-event-mode))))
+                                (let ((inhibit-read-only t))
+                                  (orrient-event--render event (orrient-timers--current-time)))
+                                (orrient-event-mode))
+    (orrient--display-buffer buffer)))
 
 (defun orrient-event--format-eta (minutes)
   "Format an ETA shown on an event of its next occurance."
@@ -79,12 +86,14 @@ EVENT is a `orrient-event' struct that is to be rendered."
   (insert ?|)
   (goto-char (point-min)))
 
-(define-derived-mode orrient-event-mode special-mode "GW2 Event Information"
+(define-derived-mode orrient-event-mode orrient-mode "GW2 Event"
   "View Guild Wars 2 Event."
-  :group 'orrient
+  :group 'orrient-event
   :syntax-table nil
   :abbrev-table nil
-  :interactive t)
+  :interactive t
+  (when (featurep 'evil)
+    (evil-local-set-key 'normal (kbd "q") 'orrient--quit)))
 
 (provide 'orrient-event)
 ;;; orrient-event.el ends here

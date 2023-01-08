@@ -14,6 +14,12 @@ BODY is evaluated with `orrient-meta-buffer'"
     (with-current-buffer buffer
       ,@body)))
 
+(defvar orrient-meta-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") #'orrient--quit)
+    map)
+  "Keymap for `orrient-meta-mode'.")
+
 ;;;###autoload
 (defun orrient-meta-open (meta)
   "Open a GW2 meta buffer.
@@ -25,7 +31,8 @@ META is a `orrient-meta' struct that is to be rendered."
      (list (cdr (assoc (completing-read "Meta: " completions) completions)))))
   (let* ((buffer (get-buffer-create (orrient-meta--buffer-name meta))))
     (orrient-meta--with-buffer meta
-                               (orrient-meta--render meta (orrient-timers--current-time))
+                               (let ((inhibit-read-only t))
+                                 (orrient-meta--render meta (orrient-timers--current-time)))
                                (orrient-meta-mode))
     (orrient--display-buffer buffer)))
 
@@ -67,12 +74,14 @@ META is a `orrient-meta' struct that is to be rendered."
                                             time)))
   (goto-char (point-min)))
 
-(define-derived-mode orrient-meta-mode special-mode "GW2 Meta Information"
+(define-derived-mode orrient-meta-mode orrient-mode "GW2 Meta"
   "View Guild Wars 2 Meta."
-  :group 'orrient
+  :group 'orrient-meta
   :syntax-table nil
   :abbrev-table nil
-  :interactive t)
+  :interactive t
+  (when (featurep 'evil)
+    (evil-local-set-key 'normal (kbd "q") 'orrient--quit)))
 
 (provide 'orrient-meta)
 ;;; orrient-meta.el ends here

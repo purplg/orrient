@@ -12,6 +12,7 @@
 ;;; Code:
 (require 'generator)
 
+(require 'orrient)
 (require 'orrient-data)
 
 (defvar orrient-timers-buffer "*orrient-timers*")
@@ -26,6 +27,7 @@ BODY is evaluated with `orrient-timers-buffer'"
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'widget-button-press)
+    (define-key map (kbd "q") #'orrient--quit)
     (define-key map (kbd "C-n") #'orrient-timers-forward)
     (define-key map (kbd "C-p") #'orrient-timers-backward)
     (define-key map [tab] #'widget-forward)
@@ -41,7 +43,8 @@ BODY is evaluated with `orrient-timers-buffer'"
                (evil-local-set-key 'normal (kbd "[") 'orrient-timers-backward)
                (evil-local-set-key 'normal (kbd "gt") 'orrient-timers-goto)
                (evil-local-set-key 'normal (kbd "gk") 'orrient-timers-forward)
-               (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)))))
+               (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)
+               (evil-local-set-key 'normal (kbd "q") 'orrient--quit)))))
 
 (defcustom orrient-timers-skip-step 15
   "Amount of time to skip when stepping forward or backwards in
@@ -407,15 +410,15 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (tabulated-list-print t nil))
 
 ;;;###autoload
-(defun orrient-timers-open ()
+(defun orrient-timers-open (&optional interactive)
   "Open the event timers buffer."
-  (interactive)
+  (interactive "p")
   (let* ((buffer (get-buffer-create orrient-timers-buffer)))
-    (orrient--display-buffer buffer)
     (with-current-buffer buffer
-      (orrient-timers-mode))))
+      (orrient-timers-mode))
+    (orrient--display-buffer buffer (not interactive))))
 
-(define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Event Timers"
+(define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Timers"
   "View Guild Wars 2 Event Timers."
   :group 'orrient-timers
   :syntax-table nil
