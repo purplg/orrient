@@ -10,6 +10,8 @@
 ;; Configuration
 
 ;;; Code:
+(declare-function evil-define-key* "evil-core")
+
 (defcustom orrient-buffer-prefix "orrient-"
   "Prefix for all orrient buffers."
   :group 'orrient

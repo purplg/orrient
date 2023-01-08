@@ -32,19 +32,16 @@ BODY is evaluated with `orrient-timers-buffer'"
     (define-key map (kbd "C-p") #'orrient-timers-backward)
     (define-key map [tab] #'widget-forward)
     (define-key map [backtab] #'widget-backward)
+    (when (fboundp #'evil-define-key*)
+      (evil-define-key* 'normal map
+        (kbd "]") #'orrient-timers-forward
+        (kbd "[") #'orrient-timers-backward
+        (kbd "gk") #'orrient-timers-forward
+        (kbd "gj") #'orrient-timers-backward
+        (kbd "gt") #'orrient-timers-goto
+        (kbd "q") #'orrient--quit))
     map)
   "Keymap for `orrient-timers-mode'.")
-
-(when (featurep 'evil)
-  (add-hook 'orrient-timers-mode-hook
-            (lambda ()
-              (orrient-timers--with-buffer
-               (evil-local-set-key 'normal (kbd "]") 'orrient-timers-forward)
-               (evil-local-set-key 'normal (kbd "[") 'orrient-timers-backward)
-               (evil-local-set-key 'normal (kbd "gt") 'orrient-timers-goto)
-               (evil-local-set-key 'normal (kbd "gk") 'orrient-timers-forward)
-               (evil-local-set-key 'normal (kbd "gj") 'orrient-timers-backward)
-               (evil-local-set-key 'normal (kbd "q") 'orrient--quit)))))
 
 (defcustom orrient-timers-skip-step 15
   "Amount of time to skip when stepping forward or backwards in
