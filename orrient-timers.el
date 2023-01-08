@@ -98,25 +98,13 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
 
 
 ;; Sorting
-(defvar orrient-timers--category-order
-  '(core-tyria
-    living-world-1
-    living-world-2
-    heart-of-thorns
-    living-world-3
-    path-of-fire
-    living-world-4
-    icebrood-saga
-    end-of-dragons)
-  "The order the table is sorted when sorted by 'Category'.")
-
-(defun orrient-timers--category-sort (entry-a entry-b)
-  "Predicate for `sort' that sorts categories by `orrient-timers--category-order'
-Return t when ENTRY-A is before COL-B."
-  (let ((category-a-id (plist-get (cdr (aref (nth 1 entry-a) 1)) 'orrient-category-id))
-        (category-b-id (plist-get (cdr (aref (nth 1 entry-b) 1)) 'orrient-category-id)))
-    (< (cl-position category-a-id orrient-timers--category-order)
-       (cl-position category-b-id orrient-timers--category-order))))
+(defun orrient-timers--schedule-sort (entry-a entry-b)
+  "Predicate for `sort' that sorts by the order the meta appears in `orrient-schedule'.
+Return t when ENTRY-A is before ENTRY-B."
+  (let ((meta-a (plist-get (cdr (aref (nth 1 entry-a) 0)) 'orrient-meta))
+        (meta-b (plist-get (cdr (aref (nth 1 entry-b) 0)) 'orrient-meta)))
+    (< (cl-position meta-a orrient-schedule)
+       (cl-position meta-b orrient-schedule))))
 
 (defun orrient-timers--event-instance-sort (event-column entry-a entry-b)
   "Predicate for `sort' that sorts events by how soon they will occur next.
@@ -425,7 +413,7 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
                                        (orrient-timers-now)))
 
   (setq tabulated-list-format (vector '("Meta" 21 t)
-                                      '("Category" 21 orrient-timers--category-sort)
+                                      '("Category" 21 orrient-timers--schedule-sort)
                                       `("Current" 21 ,(apply-partially #'orrient-timers--event-instance-sort 2))
                                       `("Next" 21 ,(apply-partially #'orrient-timers--event-instance-sort 3))
                                       `("Later" 21 ,(apply-partially #'orrient-timers--event-instance-sort 4))))
