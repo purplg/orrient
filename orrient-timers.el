@@ -387,7 +387,8 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
        (list meta-name
              (vector (cons meta-name `(action orrient-timers--button-meta
                                        orrient-meta ,meta))
-                     (cons (orrient--meta-category-name meta-category) `(orrient-category-id ,meta-category))
+                     (cons (orrient--meta-category-name meta-category) `(face ,(orrient-timers--get-category-face meta-category)
+                                                                         orrient-category-id ,meta-category))
                      (orrient-timers--event-entry (iter-next meta-iter) time)
                      (orrient-timers--event-entry (iter-next meta-iter) time)
                      (orrient-timers--event-entry (iter-next meta-iter) time)))))
@@ -408,17 +409,6 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
     (with-current-buffer buffer
       (orrient-timers-mode))))
 
-(defun orrient-timers--printer (id cols)
-  "Used for printing to the `tabulated-list'."
-  (when-let ((index 1)
-             (column (aref cols index))
-             (name (car column))
-             (id (plist-get (cdr column) 'orrient-category-id)))
-    (setf (car (aref cols index))
-          (propertize name
-                      'face (orrient-timers--get-category-face id))))
-  (tabulated-list-print-entry id cols))
-
 (define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Event Timers"
   "View Guild Wars 2 Event Timers."
   :group 'orrient-timers
@@ -428,7 +418,6 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (setq-local revert-buffer-function (lambda (&rest _)
                                        (orrient-timers-now)))
 
-  (setq tabulated-list-printer #'orrient-timers--printer)
   (setq tabulated-list-format (vector '("Meta" 21 t)
                                       '("Category" 21 orrient-timers--category-sort)
                                       `("Current" 21 ,(apply-partially #'orrient-timers--event-instance-sort 2))
