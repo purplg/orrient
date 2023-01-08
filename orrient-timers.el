@@ -15,14 +15,13 @@
 (require 'orrient)
 (require 'orrient-data)
 
-(defvar orrient-timers-buffer "*orrient-timers*")
+(defvar orrient-timers-buffer-suffix "timers")
 
 (defmacro orrient-timers--with-buffer (&rest body)
-  "Like `with-current-buffer' but with `orrient-timers-buffer'.
-BODY is evaluated with `orrient-timers-buffer'"
-  `(when-let ((buffer (get-buffer orrient-timers-buffer)))
-    (with-current-buffer buffer
-      ,@body)))
+  "Like `with-current-buffer' but with an `orrient-' buffer namespace.
+BODY is evaluated in an orrient buffer."
+  `(orrient--with-buffer ,orrient-timers-buffer-suffix
+    ,@body))
 
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
@@ -404,10 +403,9 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
 (defun orrient-timers-open (&optional interactive)
   "Open the event timers buffer."
   (interactive "p")
-  (let* ((buffer (get-buffer-create orrient-timers-buffer)))
-    (with-current-buffer buffer
-      (orrient-timers-mode))
-    (orrient--display-buffer buffer (not interactive))))
+  (orrient--display-buffer
+   (orrient-timers--with-buffer (orrient-timers-mode))
+   (not interactive)))
 
 (define-derived-mode orrient-timers-mode tabulated-list-mode "GW2 Timers"
   "View Guild Wars 2 Event Timers."
