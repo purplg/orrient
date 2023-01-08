@@ -431,7 +431,8 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
                                       `("Later" 21 ,(apply-partially #'orrient-timers--event-instance-sort 4))))
   (orrient-timers-now)
   (tabulated-list-init-header)
-  (tabulated-list-print))
+  (tabulated-list-print)
+  (tabulated-list-sort 1))
 
 (provide 'orrient-timers)
 
