@@ -108,7 +108,9 @@ Return t when ENTRY-A is before ENTRY-B."
 
 (defun orrient-timers--event-instance-sort (event-column entry-a entry-b)
   "Predicate for `sort' that sorts events by how soon they will occur next.
-Return t when ENTRY-A comes before COL-B."
+EVENT-COLUMN is the column index that was sorted.
+
+Return t when ENTRY-A comes before ENTRY-B."
   (let ((category-a-minutes (orrient-event-instance-start (plist-get (cdr (aref (nth 1 entry-a) event-column)) 'orrient-event-instance)))
         (category-b-minutes (orrient-event-instance-start (plist-get (cdr (aref (nth 1 entry-b) event-column)) 'orrient-event-instance))))
     (< category-a-minutes category-b-minutes)))
