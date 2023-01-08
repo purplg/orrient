@@ -2,17 +2,16 @@
 (require 'orrient-data)
 (require 'orrient-timers)
 
-(defvar orrient-meta-buffer-format "*orrient-meta: %s*")
+(defvar orrient-meta--buffer-suffix-format "meta: %s")
 
 (defun orrient-meta--buffer-name (meta)
-  (format orrient-meta-buffer-format (orrient-meta-name meta)))
+  (format orrient-meta--buffer-suffix-format (orrient-meta-name meta)))
 
 (defmacro orrient-meta--with-buffer (meta &rest body)
   "Like `with-current-buffer' but with `orrient-meta-buffer'.
 BODY is evaluated with `orrient-meta-buffer'"
-  `(when-let ((buffer (get-buffer (orrient-meta--buffer-name meta))))
-    (with-current-buffer buffer
-      ,@body)))
+  `(orrient--with-buffer (orrient-meta--buffer-name ,meta)
+                        ,@body))
 
 (defvar orrient-meta-mode-map
   (let ((map (make-sparse-keymap)))
@@ -29,12 +28,11 @@ META is a `orrient-meta' struct that is to be rendered."
                                 (cons (orrient-meta-name meta) meta))
                               orrient-schedule)))
      (list (cdr (assoc (completing-read "Meta: " completions) completions)))))
-  (let* ((buffer (get-buffer-create (orrient-meta--buffer-name meta))))
-    (orrient-meta--with-buffer meta
-                               (let ((inhibit-read-only t))
-                                 (orrient-meta--render meta (orrient-timers--current-time)))
-                               (orrient-meta-mode))
-    (orrient--display-buffer buffer)))
+  (orrient--display-buffer
+   (orrient-meta--with-buffer meta
+                              (let ((inhibit-read-only t))
+                                (orrient-meta--render meta (orrient-timers--current-time)))
+                              (orrient-meta-mode))))
 
 (defun orrient-meta--render-event (instance time)
   (let* ((event (orrient-event-instance-event instance))

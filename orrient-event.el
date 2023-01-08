@@ -2,17 +2,16 @@
 (require 'orrient-data)
 (require 'orrient-timers)
 
-(defvar orrient-event-buffer-format "*orrient-event: %s*")
+(defvar orrient-event--buffer-suffix-format "event: %s")
 
 (defun orrient-event--buffer-name (event)
-  (format orrient-event-buffer-format (orrient-event-name event)))
+  (format orrient-event--buffer-suffix-format (orrient-event-name event)))
 
 (defmacro orrient-event--with-buffer (event &rest body)
   "Like `with-current-buffer' but with `orrient-event-buffer'.
 BODY is evaluated with `orrient-event-buffer'"
-  `(when-let ((buffer (get-buffer (orrient-event--buffer-name event))))
-    (with-current-buffer buffer
-      ,@body)))
+  `(orrient--with-buffer (orrient-event--buffer-name ,event)
+                        ,@body))
 
 (defvar orrient-event-mode-map
   (let ((map (make-sparse-keymap)))
@@ -25,16 +24,15 @@ BODY is evaluated with `orrient-event-buffer'"
   "Open a GW2 event buffer.
 EVENT is a `orrient-event' struct that is to be rendered."
   (interactive
-   (let* ((completions (mapcar (lambda (event)
+   (let ((completions (mapcar (lambda (event)
                                  (cons (orrient-event-name event) event))
                                (flatten-list (mapcar #'orrient-meta-events orrient-schedule)))))
      (list (cdr (assoc (completing-read "Event: " completions) completions)))))
-  (let* ((buffer (get-buffer-create (orrient-event--buffer-name event))))
-    (orrient-event--with-buffer event
-                                (let ((inhibit-read-only t))
-                                  (orrient-event--render event (orrient-timers--current-time)))
-                                (orrient-event-mode))
-    (orrient--display-buffer buffer)))
+  (orrient--display-buffer
+   (orrient-event--with-buffer event
+                               (let ((inhibit-read-only t))
+                                 (orrient-event--render event (orrient-timers--current-time)))
+                               (orrient-event-mode))))
 
 (defun orrient-event--format-eta (minutes)
   "Format an ETA shown on an event of its next occurance."

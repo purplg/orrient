@@ -38,7 +38,8 @@
 BODY is evaluated with buffer."
   `(when-let ((buffer (get-buffer-create (orrient--buffer ,name))))
      (with-current-buffer buffer
-       ,@body)))
+       ,@body)
+     buffer))
 
 (defun orrient--quit ()
   (interactive)
