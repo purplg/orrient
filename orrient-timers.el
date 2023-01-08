@@ -254,6 +254,11 @@ If non-nil, then a `run-with-timer' timer is active.")
   (let ((meta (button-get button 'orrient-meta)))
     (orrient-meta-open meta)))
 
+(defun orrient-timers--button-event (button)
+  (let* ((instance (button-get button 'orrient-event-instance))
+        (event (orrient-event-instance-event instance)))
+    (orrient-event-open event)))
+
 
 ;; Event prediction
 (defun orrient-timers--event-next (event time)
@@ -374,7 +379,8 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (let ((event (orrient-event-instance-event event-instance))
         (minutes-until (- (orrient-event-instance-start event-instance) time)))
     (cons (orrient-timers--format-event (orrient-event-name event) minutes-until)
-          `(orrient-event-instance ,event-instance
+          `(action orrient-timers--button-event
+            orrient-event-instance ,event-instance
             face ,(orrient-timers--get-countdown-face minutes-until)))))
 
 (defun orrient-timers--entries (time)
