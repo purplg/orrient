@@ -10,6 +10,8 @@
 ;; Configuration
 
 ;;; Code:
+(require 'orrient-api)
+
 (declare-function evil-define-key* "evil-core")
 
 (defcustom orrient-buffer-prefix "orrient-"
