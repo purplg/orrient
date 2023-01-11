@@ -1,5 +1,8 @@
 ;;; orrient.el --- Tracks goals in GW2 -*- lexical-binding: t; -*-
 
+;; Package-Requires: ((emacs "25.1") (plz "0.3.3"))
+;; Version: 0.0.1
+;; Author: Ben Whitley
 ;; Homepage: https://github.com/purplg/orrient
 ;; SPDX-License-Identifier: MIT
 ;;; Commentary:
