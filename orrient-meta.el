@@ -18,6 +18,9 @@ BODY is evaluated with `orrient-meta-buffer'"
 (defvar orrient-meta-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") #'orrient--quit)
+    (when (fboundp #'evil-define-key*)
+      (evil-define-key* 'normal map
+        (kbd "q") #'orrient--quit))
     map)
   "Keymap for `orrient-meta-mode'.")
 
@@ -79,9 +82,7 @@ META is a `orrient-meta' struct that is to be rendered."
   :group 'orrient-meta
   :syntax-table nil
   :abbrev-table nil
-  :interactive t
-  (when (featurep 'evil)
-    (evil-local-set-key 'normal (kbd "q") 'orrient--quit)))
+  :interactive t)
 
 (provide 'orrient-meta)
 ;;; orrient-meta.el ends here

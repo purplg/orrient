@@ -18,6 +18,9 @@ BODY is evaluated with `orrient-event-buffer'"
 (defvar orrient-event-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") #'orrient--quit)
+    (when (fboundp #'evil-define-key*)
+      (evil-define-key* 'normal map
+        (kbd "q") #'orrient--quit))
     map)
   "Keymap for `orrient-event-mode'.")
 
@@ -91,9 +94,7 @@ EVENT is a `orrient-event' struct that is to be rendered."
   :group 'orrient-event
   :syntax-table nil
   :abbrev-table nil
-  :interactive t
-  (when (featurep 'evil)
-    (evil-local-set-key 'normal (kbd "q") 'orrient--quit)))
+  :interactive t)
 
 (provide 'orrient-event)
 ;;; orrient-event.el ends here
