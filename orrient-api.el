@@ -9,6 +9,12 @@
                                    (dailies-tomorrow . "/v2/achievements/daily/tomorrow")
                                    (items . "/v2/items")))
 
+
+;; STRUCTS
+
+;; These are typically response objects based on the GW2
+;; API. `https://wiki.guildwars2.com/wiki/API:Main'
+
 (cl-defstruct orrient-api-achievement
   id
   name
@@ -33,7 +39,8 @@
   name)
 
 
-;; Requests
+;; REQUESTS
+
 (defun orrient-api--achievements (ids &optional callback)
   "Retrieve data about achievements.
 IDS is list of achievement ids to resolve."
