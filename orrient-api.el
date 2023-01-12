@@ -134,27 +134,19 @@ query."
   (when callback
     (funcall callback (append fetched cached))))
 
-;; TODO Utilize `fetched' and `cached' properly.
-(defun orrient-api--handler-dailies (dailies _cached callback)
-  (orrient-cache--insert-dailies dailies (decode-time))
-  (let ((pve (orrient-api-dailies-pve dailies))
-        (pvp (orrient-api-dailies-pvp dailies))
-        (wvw (orrient-api-dailies-wvw dailies))
-        (fractals (orrient-api-dailies-fractals dailies))
-        (special (orrient-api-dailies-special dailies)))
-    (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id pve))
-    (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id pvp))
-    (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id wvw))
-    (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id fractals))
-    (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id special))))
-
-(orrient-api--dailies
- (lambda (dailies)
-   (message "%S" dailies)))
-
-(let* ((dailies (make-orrient-api-dailies :pve `(,(make-orrient-api-daily :achievement-id 1))))
-       (pve (orrient-api-dailies-pve dailies)))
-  (mapcar #'orrient-api-daily-achievement-id pve))
+(defun orrient-api--handler-dailies (fetched cached callback)
+  (let ((dailies (or fetched cached)))
+    (orrient-cache--insert-dailies dailies (decode-time))
+    (let ((pve (orrient-api-dailies-pve dailies))
+          (pvp (orrient-api-dailies-pvp dailies))
+          (wvw (orrient-api-dailies-wvw dailies))
+          (fractals (orrient-api-dailies-fractals dailies))
+          (special (orrient-api-dailies-special dailies)))
+      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id pve))
+      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id pvp))
+      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id wvw))
+      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id fractals))
+      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id special)))))
 
 (provide 'orrient-api)
 ;;; orrient-api.el ends here
