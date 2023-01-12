@@ -142,11 +142,11 @@ query."
           (wvw (orrient-api-dailies-wvw dailies))
           (fractals (orrient-api-dailies-fractals dailies))
           (special (orrient-api-dailies-special dailies)))
-      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id pve))
-      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id pvp))
-      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id wvw))
-      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id fractals))
-      (orrient-api--achievements (mapcar #'orrient-api-daily-achievement-id special)))))
+      (orrient-api--achievements `(,@(mapcar #'orrient-api-daily-achievement-id pve)
+                                   ,@(mapcar #'orrient-api-daily-achievement-id pvp)
+                                   ,@(mapcar #'orrient-api-daily-achievement-id wvw)
+                                   ,@(mapcar #'orrient-api-daily-achievement-id fractals)
+                                   ,@(mapcar #'orrient-api-daily-achievement-id special))))))
 
 (provide 'orrient-api)
 ;;; orrient-api.el ends here
