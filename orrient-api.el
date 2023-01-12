@@ -146,7 +146,8 @@ query."
                                    ,@(mapcar #'orrient-api-daily-achievement-id pvp)
                                    ,@(mapcar #'orrient-api-daily-achievement-id wvw)
                                    ,@(mapcar #'orrient-api-daily-achievement-id fractals)
-                                   ,@(mapcar #'orrient-api-daily-achievement-id special))))))
+                                   ,@(mapcar #'orrient-api-daily-achievement-id special))
+                                 callback))))
 
 (provide 'orrient-api)
 ;;; orrient-api.el ends here
