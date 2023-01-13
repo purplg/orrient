@@ -54,7 +54,7 @@ TIMESTAMP is `decoded-time' struct of the time the ACHIEVEMENT was requested."
 TIMESTAMP is `decoded-time' struct of the time the DAILY was active."
   (sqlite-execute (orrient-cache--db)
     (format "INSERT OR REPLACE INTO dailies VALUES (%d, \"%s\");"
-            (orrient-api-daily-achievement-id daily)
+            (orrient-api-achievement-id (orrient-api-daily-achievement daily))
             (orrient-api-daily-type daily))))
 
 (defun orrient-cache--insert-dailies (dailies timestamp)
@@ -71,11 +71,11 @@ TIMESTAMP is `decoded-time' struct of the time the DAILIES were active."
       (orrient-cache--insert-daily daily timestamp))))
 
 (defun orrient-cache--get-dailies ()
-  (when-let ((pve (orrient-cache--get-dailies-of-type 'pve))
-             (pvp (orrient-cache--get-dailies-of-type 'pvp))
-             (wvw (orrient-cache--get-dailies-of-type 'wvw))
-             (fractals (orrient-cache--get-dailies-of-type 'fractals))
-             (special (orrient-cache--get-dailies-of-type 'special)))
+  (let ((pve (orrient-cache--get-dailies-of-type 'pve))
+        (pvp (orrient-cache--get-dailies-of-type 'pvp))
+        (wvw (orrient-cache--get-dailies-of-type 'wvw))
+        (fractals (orrient-cache--get-dailies-of-type 'fractals))
+        (special (orrient-cache--get-dailies-of-type 'special)))
     (make-orrient-api-dailies
      :pve pve
      :pvp pvp
@@ -84,22 +84,30 @@ TIMESTAMP is `decoded-time' struct of the time the DAILIES were active."
      :special special)))
 
 (defun orrient-cache--get-dailies-of-type (type)
-  (mapcar (lambda (daily)
-            (make-orrient-api-daily :achievement-id (pop daily) :type (intern (pop daily))))
-          (sqlite-select (orrient-cache--db)
-                         (format "SELECT * FROM dailies WHERE TYPE='%s'" type))))
+  (mapcar
+   (lambda (daily)
+     (make-orrient-api-daily :achievement (make-orrient-api-achievement :id (pop daily))
+                             :type (intern (pop daily))))
+   (sqlite-select (orrient-cache--db)
+                  (format "SELECT * FROM dailies WHERE TYPE='%s'" type))))
 
 (defun orrient-cache--get-achievement (id)
-  (car (sqlite-select (orrient-cache--db)
-                      (format "SELECT * FROM achievements WHERE id=%d"
-                              id))))
+  (when-let ((result (car (sqlite-select (orrient-cache--db)
+                                         (format "SELECT * FROM achievements WHERE id=%d"
+                                                 id)))))
+    (make-orrient-api-achievement :id (pop result) :name (pop result))))
 
 (defun orrient-cache--get-achievements (ids)
-  (sqlite-select (orrient-cache--db)
-                 (concat "SELECT * FROM achievements WHERE id IN ( "
-                         (string-join (mapcar #'prin1-to-string ids)
-                                      ", ")
-                         " )")))
+  (seq-map
+   (lambda (result)
+     (make-orrient-api-achievement :id (pop result) :name (pop result)))
+   (sqlite-select (orrient-cache--db)
+                  (concat "SELECT * FROM achievements WHERE id IN ( "
+                          (string-join (mapcar #'prin1-to-string ids)
+                                       ", ")
+                          " )"))))
 
 (provide 'orrient-cache)
 ;;; orrient-cache.el ends here
+
+
