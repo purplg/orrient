@@ -65,7 +65,7 @@ DAILIES is a list of `orrient-api-daily' to be rendered in the section."
   "Open the daily dailies buffer."
   (interactive)
   (orrient--display-buffer
-   (orrient-daily-mode)
+   (orrient-daily--with-buffer (orrient-daily-mode))
    (not interactive)))
 
 (define-derived-mode orrient-daily-mode orrient-mode "GW2 Dailies"
