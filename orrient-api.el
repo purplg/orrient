@@ -20,11 +20,19 @@
 ;; API. `https://wiki.guildwars2.com/wiki/API:Main'
 
 (cl-defstruct orrient-api-achievement
+  "A single achievement."
   id
   name
   rewards)
 
 (cl-defstruct orrient-api-daily
+  "A single daily achievement.
+
+Every daily is an achievement, but most achievements are not
+dailies.
+
+This is only created and for use with the `orrinet-api-dailies'
+struct."
   achievement
   level-min
   level-max
@@ -32,6 +40,10 @@
   type)
 
 (cl-defstruct orrient-api-dailies
+  "All the dailies for a specific day.
+
+The PVE, PVP, WVW, FRACTALS, and SPECIAL fields are each a list
+of `orrient-api-daily''s."
   pve
   pvp
   wvw
@@ -39,6 +51,9 @@
   special)
 
 (cl-defstruct orrient-api-item
+  "An in-game item.
+
+Usually used for achievement rewards."
   id
   name)
 
@@ -103,6 +118,10 @@ query."
 ;; the response payload to utilize `json-parse-buffer'
 
 (defun orrient-api--parse-achievements ()
+  "Used by `orrient-api--achievements' to parse a response from the
+GW2 API.
+
+See: `https://wiki.guildwars2.com/wiki/API:2/achievements'"
   (let ((achievements (json-parse-buffer)))
     (seq-map (lambda (achievement)
                (make-orrient-api-achievement
@@ -111,6 +130,11 @@ query."
              achievements)))
 
 (defun orrient-api--parse-dailies ()
+  "Used by `orrient-api--dailies' to parse a response from the
+GW2 API.
+
+See: `https://wiki.guildwars2.com/wiki/API:2/achievements/daily'
+and: `https://wiki.guildwars2.com/wiki/API:2/achievements/daily/tomorrow'"
   (let* ((dailies (json-parse-buffer))
          (pve (gethash "pve" dailies))
          (pvp (gethash "pvp" dailies))
@@ -146,12 +170,20 @@ query."
 ;; cached achievements, and a callback function to send this combined lists.
 
 (defun orrient-api--handler-achievements (fetched cached callback)
+  "Caches the parsed response from the GW2 achievements endpoint and
+dispatches the callback."
   (dolist (achievement fetched)
     (orrient-cache--insert-achievement achievement (decode-time)))
   (when callback
     (funcall callback (append fetched cached))))
 
 (defun orrient-api--handler-dailies (fetched cached callback)
+  "Caches the parsed response from the GW2 dailies endpoint and
+dispatches the callback.
+
+This also embeds the relevent achievement
+data (`orrient-api-achievement') in the `orrient-api-daily'
+struct."
   (when-let ((dailies (or fetched cached)))
     (orrient-cache--insert-dailies dailies (decode-time))
     (let ((pve (orrient-api-dailies-pve dailies))
