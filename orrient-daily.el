@@ -25,8 +25,9 @@ BODY is evaluated in an orrient buffer."
     (orrient-api--dailies
      (lambda (dailies)
        (setq orrient-daily--dailies dailies)
-       (orrient-daily--with-buffer (orrient-daily--render)))))
-  (orrient-daily--with-buffer (orrient-daily--render)))
+       (orrient-daily--with-buffer
+        (orrient-daily--render)))))
+  (orrient-daily--render))
 
 (defun orrient-daily--render-section (title dailies)
   "Render a section on the dailies buffer.
@@ -72,8 +73,9 @@ DAILIES is a list of `orrient-api-daily' to be rendered in the section."
   :group 'orrient-daily
   :syntax-table nil
   :abbrev-table nil
-  :interactive t
-  (orrient-daily--update))
+  :interactive nil
+  (let ((inhibit-read-only t))
+    (orrient-daily--update)))
 
 (provide 'orrient-daily)
 ;;; orrient-daily.el ends here
