@@ -1,4 +1,8 @@
 ;;; orrient-api.el --- GW2 API -*- lexical-binding: t; -*-
+(require 'cl-lib)
+(require 'subr-x)
+(require 'eieio)
+
 (require 'plz)
 
 (require 'orrient-cache)
