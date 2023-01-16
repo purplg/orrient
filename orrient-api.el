@@ -45,6 +45,8 @@
 
 ;; REQUESTS
 
+;; Send API request to the relevant GW2 API endpoints.
+
 (defun orrient-api--achievements (ids &optional callback)
   "Retrieve data about achievements.
 IDS is list of achievement ids to resolve."
