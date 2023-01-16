@@ -25,31 +25,46 @@ BODY is evaluated in an orrient buffer."
     (orrient-api--dailies
      (lambda (dailies)
        (setq orrient-daily--dailies dailies)
-       (orrient-daily--with-buffer
-        (orrient-daily--render)))))
-  (orrient-daily--render))
+       (orrient-daily--with-buffer (orrient-daily--render)))))
+  (orrient-daily--with-buffer (orrient-daily--render)))
 
-;; TODO Colorize / group by daily type
+(defun orrient-daily--render-section (title dailies)
+  "Render a section on the dailies buffer.
+
+TITLE is rendered at the top of the section.
+
+DAILIES is a list of `orrient-api-daily' to be rendered in the section."
+  (set-text-properties (point)
+                       (progn (insert title)
+                              (point))
+                       `(face 'info-title-2))
+  (insert ?\n)
+  (dolist (daily (sort dailies
+                       (lambda (a b)
+                         (string< (orrient-api-achievement-name (orrient-api-daily-achievement a))
+                                  (orrient-api-achievement-name (orrient-api-daily-achievement b))))))
+    (insert (orrient-api-achievement-name (orrient-api-daily-achievement daily)))
+    (insert ?\n)))
+
 (defun orrient-daily--render ()
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (dolist (daily (sort orrient-daily--dailies
-                         (lambda (a b)
-                           (string< (orrient-api-achievement-name (orrient-api-daily-achievement a))
-                                    (orrient-api-achievement-name (orrient-api-daily-achievement b))))))
-      (insert (format "%S" (orrient-api-daily-type daily)))
-      (set-text-properties (point)
-                           (progn (insert (orrient-api-achievement-name (orrient-api-daily-achievement daily)))
-                                  (point))
-                           `(face 'info-title-2))
-      (insert ?\n))))
+  (erase-buffer)
+  (orrient-daily--render-section "PvE" (orrient-api-dailies-pve orrient-daily--dailies))
+  (insert ?\n)
+  (orrient-daily--render-section "PvP" (orrient-api-dailies-pvp orrient-daily--dailies))
+  (insert ?\n)
+  (orrient-daily--render-section "WvW" (orrient-api-dailies-wvw orrient-daily--dailies))
+  (insert ?\n)
+  (orrient-daily--render-section "Fractals" (orrient-api-dailies-fractals orrient-daily--dailies))
+  (when-let ((special (orrient-api-dailies-special orrient-daily--dailies)))
+    (insert ?\n)
+    (orrient-daily--render-section "Special" special)))
 
 ;;;###autoload
 (defun orrient-daily-open (&optional interactive)
   "Open the daily dailies buffer."
   (interactive)
   (orrient--display-buffer
-   (orrient-daily--with-buffer (orrient-daily-mode))
+   (orrient-daily-mode)
    (not interactive)))
 
 (define-derived-mode orrient-daily-mode orrient-mode "GW2 Dailies"

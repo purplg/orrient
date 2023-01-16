@@ -45,7 +45,8 @@
 BODY is evaluated with buffer."
   `(when-let ((buffer (get-buffer-create (orrient--buffer ,name))))
      (with-current-buffer buffer
-       ,@body)
+       (let ((inhibit-read-only t))
+         ,@body))
      buffer))
 
 (defun orrient--quit ()
