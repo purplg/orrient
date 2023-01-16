@@ -16,7 +16,8 @@
 (require 'orrient)
 (require 'orrient-data)
 
-(defvar orrient-timers-buffer-suffix "timers")
+(defvar orrient-timers-buffer-suffix "timers"
+  "Suffix used for naming `orrient-timer' buffers.")
 
 (defmacro orrient-timers--with-buffer (&rest body)
   "Like `with-current-buffer' but with an `orrient-' buffer namespace.
@@ -246,6 +247,7 @@ If non-nil, then a `run-with-timer' timer is active.")
   :group 'orrient)
 
 (defun orrient-timers--get-countdown-face (minutes)
+  "Return the face used when MINUTES remain."
   (cond ((<= minutes 0) 'orrient-timers-countdown-now)
         ((< minutes 15) 'orrient-timers-countdown-soon)
         (t 'orrient-timers-countdown-later)))
@@ -253,10 +255,12 @@ If non-nil, then a `run-with-timer' timer is active.")
 
 ;; Callbacks
 (defun orrient-timers--button-meta (button)
+  "Called when a meta BUTTON is pressed."
   (let ((meta (button-get button 'orrient-meta)))
     (orrient-meta-open meta)))
 
 (defun orrient-timers--button-event (button)
+  "Called when an event BUTTON is pressed."
   (let* ((instance (button-get button 'orrient-event-instance))
         (event (orrient-event-instance-event instance)))
     (orrient-event-open event)))

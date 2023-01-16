@@ -7,6 +7,7 @@
 (defvar orrient-meta--buffer-suffix-format "meta: %s")
 
 (defun orrient-meta--buffer-name (meta)
+  "Return the name of buffer when displaying META."
   (format orrient-meta--buffer-suffix-format (orrient-meta-name meta)))
 
 (defmacro orrient-meta--with-buffer (meta &rest body)
@@ -40,6 +41,11 @@ META is a `orrient-meta' struct that is to be rendered."
                               (orrient-meta-mode))))
 
 (defun orrient-meta--render-event (instance time)
+  "Render an event in current buffer.
+
+INSTANCE is an `orrient-event-instance'.
+
+TIME is the amount of minutes offset from UTC 0."
   (let* ((event (orrient-event-instance-event instance))
          (event-name (orrient-event-name event))
          (event-start (- (orrient-event-instance-start instance) time))
@@ -67,6 +73,11 @@ META is a `orrient-meta' struct that is to be rendered."
                          `(face (,(orrient-timers--get-countdown-face event-end))))))
 
 (defun orrient-meta--render (meta time)
+  "Render a meta in current buffer.
+
+META is an `orrient-meta' to be rendered.
+
+TIME is the amount of minutes offset from UTC 0."
   (erase-buffer)
   (insert (propertize (orrient-meta-name meta) 'face 'info-title-1))
   (let ((iter (orrient-timers--meta-iter meta time)))

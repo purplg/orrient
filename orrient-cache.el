@@ -4,24 +4,25 @@
 (defconst orrient-cache--path (expand-file-name "orrient/" user-emacs-directory))
 (defconst orrient-cache--filename "cache.db")
 
-(defvar orrient-cache--db nil)
+(defvar orrient-cache--db nil
+  "The sqlite database object used for caching.")
 
 (defun orrient-cache--db ()
+  "Return the sqlite database object. Create it if it doesn't exist."
   (unless orrient-cache--db
     (make-directory orrient-cache--path t)
     (setq orrient-cache--db (sqlite-open (expand-file-name orrient-cache--filename orrient-cache--path))))
   orrient-cache--db)
 
-(defun orrient-cache--store (key value)
-  (orrient-cache--db))
-
 (defun orrient-cache--close ()
+  "Close the Orrient caching database."
   (when (and orrient-cache--db
              (sqlitep orrient-cache--db))
     (sqlite-close orrient-cache--db)
     (setq orrient-cache--db nil)))
 
 (defun orrient-cache--init ()
+  "Initialize the Orrient caching database."
   (sqlite-execute (orrient-cache--db)
     "DROP TABLE IF EXISTS dailies;")
   (sqlite-execute (orrient-cache--db)
@@ -71,6 +72,7 @@ TIMESTAMP is `decoded-time' struct of the time the DAILIES were active."
       (orrient-cache--insert-daily daily timestamp))))
 
 (defun orrient-cache--get-dailies ()
+  "Return the current dailies in cache."
   (let ((pve (orrient-cache--get-dailies-of-type 'pve))
         (pvp (orrient-cache--get-dailies-of-type 'pvp))
         (wvw (orrient-cache--get-dailies-of-type 'wvw))
@@ -84,6 +86,9 @@ TIMESTAMP is `decoded-time' struct of the time the DAILIES were active."
      :special special)))
 
 (defun orrient-cache--get-dailies-of-type (type)
+  "Return the current dailies in cache of a certain type.
+
+TYPE is either `pve', `pvp', `wvw', `fractals', or `special'."
   (mapcar
    (lambda (daily)
      (make-orrient-api-daily :achievement (make-orrient-api-achievement :id (pop daily))
@@ -92,12 +97,14 @@ TIMESTAMP is `decoded-time' struct of the time the DAILIES were active."
                   (format "SELECT * FROM dailies WHERE TYPE='%s'" type))))
 
 (defun orrient-cache--get-achievement (id)
+  "Return the achievement with the id ID."
   (when-let ((result (car (sqlite-select (orrient-cache--db)
                                          (format "SELECT * FROM achievements WHERE id=%d"
                                                  id)))))
     (make-orrient-api-achievement :id (pop result) :name (pop result))))
 
 (defun orrient-cache--get-achievements (ids)
+  "Return all the achievements with the list of id's in IDS."
   (seq-map
    (lambda (result)
      (make-orrient-api-achievement :id (pop result) :name (pop result)))

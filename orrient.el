@@ -15,6 +15,7 @@
 ;;; Code:
 (require 'orrient-api)
 
+;; Prevent compiler errors. Included for setting Evil keybindings, if available.
 (declare-function evil-define-key* "evil-core")
 
 (defcustom orrient-buffer-prefix "orrient-"
@@ -26,14 +27,19 @@
   "List of orrient buffers opened.")
 
 (defun orrient--buffer (name)
+  "Return NAME in the format for Orrient buffer names."
   (format "*%s%s*" orrient-buffer-prefix name))
 
 (defun orrient--buffer-p (buffer)
+  "Return whether BUFFER's is an Orrient buffer."
   (with-current-buffer buffer
     (or (derived-mode-p 'orrient-mode)
         (derived-mode-p 'orrient-timers-mode))))
 
 (defun orrient--display-buffer (buffer &optional no-hist)
+  "Display an orrient buffer.
+
+Used to keep breadcrumbs of Orrient buffers."
   (display-buffer buffer (when (and (orrient--buffer-p (current-buffer))
                                     (orrient--buffer-p buffer))
                            '(display-buffer-same-window)))
@@ -50,6 +56,7 @@ BODY is evaluated with buffer."
      buffer))
 
 (defun orrient--quit ()
+  "Go to previous orrient buffer or quit."
   (interactive)
   (let ((current-buffer (pop orrient--buffer-list))
         (prev-buffer (car orrient--buffer-list)))
