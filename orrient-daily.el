@@ -44,7 +44,10 @@ DAILIES is a list of `orrient-api-daily' to be rendered in the section."
                        (lambda (a b)
                          (string< (orrient-api-achievement-name (orrient-api-daily-achievement a))
                                   (orrient-api-achievement-name (orrient-api-daily-achievement b))))))
-    (insert (orrient-api-achievement-name (orrient-api-daily-achievement daily)))
+    ;; Remove the 'Daily ' prefix from all achievement names.
+    (insert (let ((achievement-name (orrient-api-achievement-name (orrient-api-daily-achievement daily))))
+              (string-match "^daily \\(.*\\)" achievement-name)
+              (match-string 1 achievement-name)))
     (insert ?\n)))
 
 (defun orrient-daily--render ()
