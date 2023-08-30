@@ -217,6 +217,11 @@ If non-nil, then a `run-with-timer' timer is active.")
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
+(defface orrient-timers-category-secrets-of-the-obscure
+  '((t (:inherit 'orrient-timers-category-path-of-fire)))
+  "Face for meta heading in the event timers buffer."
+  :group 'orrient)
+
 (defun orrient-timers--get-category-face (category)
   "Convert the CATEGORY symbol into a face."
   (pcase category
@@ -228,7 +233,8 @@ If non-nil, then a `run-with-timer' timer is active.")
     ('path-of-fire 'orrient-timers-category-path-of-fire)
     ('living-world-4 'orrient-timers-category-living-world-4)
     ('icebrood-saga 'orrient-timers-category-icebrood-saga)
-    ('end-of-dragons 'orrient-timers-category-end-of-dragons)))
+    ('end-of-dragons 'orrient-timers-category-end-of-dragons)
+    ('secrets-of-the-obscure 'orrient-timers-category-secrets-of-the-obscure)))
 
 ;;; Countdown
 (defface orrient-timers-countdown-now

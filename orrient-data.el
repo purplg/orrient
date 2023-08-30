@@ -47,7 +47,8 @@
     ('path-of-fire "Path of Fire")
     ('living-world-4 "Living World S4")
     ('icebrood-saga "The Icebrood Saga")
-    ('end-of-dragons "End of Dragons")))
+    ('end-of-dragons "End of Dragons")
+    ('secrets-of-the-obscure "Secrets of the Obscure")))
 
 (defvar orrient-schedule
   `(,(make-orrient-meta :name "Day and Night" :category 'core-tyria
@@ -173,7 +174,21 @@
                 ,(make-orrient-event :name "Preparations"                :offset '(0 13) :frequency '(2 0) :length '(0 32))
                 ,(make-orrient-event :name "Jade Maw"                    :offset '(0 45) :frequency '(2 0) :length '(0  8))
                 ,(make-orrient-event :name "Preparations"                :offset '(0 53) :frequency '(2 0) :length '(0  8))
-                ,(make-orrient-event :name "The Battle for the Jade Sea" :offset '(1  0) :frequency '(2 0) :length '(1  0)))))
+                ,(make-orrient-event :name "The Battle for the Jade Sea" :offset '(1  0) :frequency '(2 0) :length '(1  0))))
+    ,(make-orrient-meta :name "Skywatch Archipelago"
+                        :category 'secrets-of-the-obscure
+                        :events `(,(make-orrient-event
+                                    :name "Unlocking the Wizard's Tower"
+                                    :offset '(1  0)
+                                    :frequency '(2 0)
+                                    :length '(0  25))))
+    ,(make-orrient-meta :name "Amnytas"
+                        :category 'secrets-of-the-obscure
+                        :events `(,(make-orrient-event
+                                    :name "Defense of Amnytas"
+                                    :offset '(0  0)
+                                    :frequency '(2 0)
+                                    :length '(0  25)))))
   "List of meta events.")
 
 (provide 'orrient-data)
