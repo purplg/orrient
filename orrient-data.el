@@ -12,6 +12,7 @@
      (:constructor make-orrient-event
                    (name &key offset length frequency
                     &aux
+                    ;; Convert tuple of '(hours minutes) to minutes for the following keys
                     (offset (+ (* 60 (pop offset)) (pop offset)))
                     (length (+ (* 60 (pop length)) (pop length)))
                     (frequency (+ (* 60 (pop frequency)) (pop frequency))))))
