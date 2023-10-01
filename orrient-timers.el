@@ -31,6 +31,7 @@ BODY is evaluated in an orrient buffer."
     (define-key map (kbd "q") #'orrient--quit)
     (define-key map (kbd "C-n") #'orrient-timers-forward)
     (define-key map (kbd "C-p") #'orrient-timers-backward)
+    (define-key map (kbd "C-c") #'orrient-timers-copy-waypoint)
     (define-key map [tab] #'widget-forward)
     (define-key map [backtab] #'widget-backward)
     (when (fboundp #'evil-define-key*)
@@ -40,6 +41,7 @@ BODY is evaluated in an orrient buffer."
         (kbd "gk") #'orrient-timers-forward
         (kbd "gj") #'orrient-timers-backward
         (kbd "gt") #'orrient-timers-goto
+        (kbd "c") #'orrient-timers-copy-waypoint
         (kbd "q") #'orrient--quit))
     map)
   "Keymap for `orrient-timers-mode'.")
@@ -96,6 +98,18 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
               (decoded-time-minute user-time)))))
   (orrient-timers--timer-cancel)
   (orrient-timers--update time))
+
+(defun orrient-timers-copy-waypoint (point)
+  (interactive "d")
+  (if-let ((waypoint (thread-first point
+                                   (button-at)
+                                   (button-get 'orrient-event-instance)
+                                   (orrient-event-instance-event)
+                                   (orrient-event-waypoint))))
+      (progn
+        (kill-new waypoint)
+        (message "orrient: Copied %s to clipboard" waypoint))
+    (message "orrient: This event has no waypoint")))
 
 ;;;###autoload
 (defun orrient-timers-open (&optional interactive)
