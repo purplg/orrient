@@ -14,7 +14,7 @@
 (require 'generator)
 
 (require 'orrient)
-(require 'orrient-data)
+(require 'orrient-schedule)
 
 (defvar orrient-timers-buffer-suffix "timers"
   "Suffix used for naming `orrient-timer' buffers.")
@@ -405,7 +405,7 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
        (list meta-name
              (vector (cons meta-name `(action orrient-timers--button-meta
                                        orrient-meta ,meta))
-                     (cons (orrient--meta-category-name meta-category) `(face ,(orrient-timers--get-category-face meta-category)
+                     (cons (orrient-schedule--meta-category-name meta-category) `(face ,(orrient-timers--get-category-face meta-category)
                                                                          orrient-category-id ,meta-category))
                      (orrient-timers--event-entry (iter-next meta-iter) time)
                      (orrient-timers--event-entry (iter-next meta-iter) time)

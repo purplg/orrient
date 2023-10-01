@@ -1,4 +1,4 @@
-;;; orrient-data.el --- Information about GW2 -*- lexical-binding: t; -*-
+;;; orrient-schedule.el --- Information about GW2 -*- lexical-binding: t; -*-
 
 ;; Homepage: https://github.com/purplg/orrient
 ;; SPDX-License-Identifier: MIT
@@ -38,7 +38,7 @@
   category
   events)
 
-(defun orrient--meta-category-name (category)
+(defun orrient-schedule--meta-category-name (category)
   "Convert the CATEGORY symbol into a human-readable string."
   (pcase category
     ('core-tyria "Core Tyria")
@@ -251,5 +251,5 @@
  :category 'secrets-of-the-obscure
  :events '(("Defense of Amnytas"                 :offset ( 0  0) :frequency ( 2  0) :length ( 0 25))))
 
-(provide 'orrient-data)
-;;; orrient-data.el ends here
+(provide 'orrient-schedule)
+;;; orrient-schedule.el ends here
