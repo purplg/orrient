@@ -438,5 +438,4 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (tabulated-list-sort 1))
 
 (provide 'orrient-timers)
-
 ;;; orrient-timers.el ends here

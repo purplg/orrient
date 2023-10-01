@@ -116,5 +116,3 @@ TYPE is either `pve', `pvp', `wvw', `fractals', or `special'."
 
 (provide 'orrient-cache)
 ;;; orrient-cache.el ends here
-
-
