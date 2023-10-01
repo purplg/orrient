@@ -5,6 +5,9 @@
 (defvar orrient-daily-buffer-suffix "dailies")
 (defvar orrient-daily--dailies '())
 
+(defface orrient-daily-title '((t (:height 2.0)))
+  "The title of something in`orrient-daily'." :group 'orrient-daily)
+
 (defmacro orrient-daily--with-buffer (&rest body)
   "Like `with-current-buffer' but with an `orrient-' buffer namespace.
 BODY is evaluated in an orrient buffer."
@@ -38,7 +41,7 @@ DAILIES is a list of `orrient-api-daily' to be rendered in the section."
   (set-text-properties (point)
                        (progn (insert title)
                               (point))
-                       `(face 'info-title-2))
+                       `(face 'orrient-daily-title))
   (insert ?\n)
   (dolist (daily (sort dailies
                        (lambda (a b)
