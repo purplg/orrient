@@ -2,8 +2,13 @@
 (require 'orrient)
 (require 'orrient-api)
 
-(defvar orrient-daily-buffer-suffix "dailies")
-(defvar orrient-daily--dailies '())
+(defcustom orrient-daily-buffer-suffix "dailies"
+  ""
+  :group 'orrient-daily
+  :type 'string)
+
+(defvar orrient-daily--dailies '()
+  "")
 
 (defface orrient-daily-title '((t (:height 2.0)))
   "The title of something in`orrient-daily'." :group 'orrient-daily)
