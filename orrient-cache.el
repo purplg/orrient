@@ -23,21 +23,21 @@
 
 (defun orrient-cache--init ()
   "Initialize the Orrient caching database."
-  (sqlite-execute (orrient-cache--db)
-    "DROP TABLE IF EXISTS dailies;")
-  (sqlite-execute (orrient-cache--db)
-    "CREATE TABLE dailies(
-       ID   INT  PRIMARY KEY NOT NULL,
-       TYPE TEXT             NOT NULL
-     );")
+  (sqlite-execute (orrient-cache--db) "
+DROP TABLE IF EXISTS dailies; // TODO Remove this. For dev purposes only
+CREATE TABLE dailies(
+  ID   INT  PRIMARY KEY NOT NULL,
+  TYPE TEXT             NOT NULL
+);
+")
 
-  (sqlite-execute (orrient-cache--db)
-    "DROP TABLE IF EXISTS achievements;")
-  (sqlite-execute (orrient-cache--db)
-    "CREATE TABLE achievements(
-       ID   INT  PRIMARY KEY NOT NULL,
-       NAME TEXT             NOT NULL
-     );"))
+  (sqlite-execute (orrient-cache--db) "
+DROP TABLE IF EXISTS achievements; // TODO Remove this. For dev purposes only
+CREATE TABLE achievements(
+  ID   INT  PRIMARY KEY NOT NULL,
+  NAME TEXT             NOT NULL
+);
+"))
 
 (defun orrient-cache--insert-achievement (achievement timestamp)
   "Cache an achievement.
