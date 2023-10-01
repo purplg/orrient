@@ -79,7 +79,7 @@
             ("Modniir Ulgoth"                    :offset ( 1 30) :frequency ( 3  0) :length ( 0 15))
             ("Shadow Behemoth"                   :offset ( 1 45) :frequency ( 2  0) :length ( 0 15))
             ("Golem Mark II"                     :offset ( 2  0) :frequency ( 3  0) :length ( 0 15))
-            ("Claw of Jormag"                    :offset ( 2 30) :frequency ( 2  0) :length ( 0 15))))
+            ("Claw of Jormag"                    :offset ( 2 30) :frequency ( 3  0) :length ( 0 15))))
 
 (orrient-schedule--add "Hard World Bosses"
   :category 'core-tyria
