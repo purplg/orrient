@@ -209,7 +209,7 @@
  :events '(("Shards and Construct"               :offset ( 0  0) :frequency ( 2  0) :length ( 0  5))
            ("Icebrood Champions"                 :offset ( 0  5) :frequency ( 2  0) :length ( 0 15))
            ("Drakkar and Spirits of the Wild"    :offset ( 1  5) :frequency ( 2  0) :length ( 0 35))
-           ("Raven Shrines"                      :offset ( 1 45) :frequency ( 2  0) :length ( 0 15))))
+           ("Defend Jora's Keep"                 :offset ( 1 45) :frequency ( 2  0) :length ( 0 15))))
 
 (orrient-schedule--add "Dragonstorm"
  :category 'icebrood-saga
