@@ -248,6 +248,11 @@
  :category 'secrets-of-the-obscure
  :events '(("Unlocking the Wizard's Tower"       :offset ( 1  0) :frequency ( 2  0) :length ( 0 25) :waypoint "[&BL4NAAA=]")))
 
+(orrient-schedule--add "Wizard's Tower"
+ :category 'secrets-of-the-obscure
+ :events '(("Target Practice"                    :offset ( 1  0) :frequency ( 2  0) :length ( 0 50) :waypoint "[&BB8OAAA=]")
+           ("Fly by Night"                       :offset ( 1 55) :frequency ( 2  0) :length ( 0 25) :waypoint "[&BB8OAAA=]")))
+
 (orrient-schedule--add "Amnytas"
  :category 'secrets-of-the-obscure
  :events '(("Defense of Amnytas"                 :offset ( 0  0) :frequency ( 2  0) :length ( 0 25) :waypoint "[&BDQOAAA=]")))
