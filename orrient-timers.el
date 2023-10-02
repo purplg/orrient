@@ -12,6 +12,7 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'generator)
+(require 'notifications)
 
 (require 'orrient)
 (require 'orrient-schedule)
@@ -31,7 +32,8 @@ BODY is evaluated in an orrient buffer."
     (define-key map (kbd "q") #'orrient--quit)
     (define-key map (kbd "C-n") #'orrient-timers-forward)
     (define-key map (kbd "C-p") #'orrient-timers-backward)
-    (define-key map (kbd "C-c") #'orrient-timers-copy-waypoint)
+    (define-key map (kbd "C-c C-c") #'orrient-timers-copy-waypoint)
+    (define-key map (kbd "C-c C-w") #'orrient-timers-watch-event)
     (define-key map [tab] #'widget-forward)
     (define-key map [backtab] #'widget-backward)
     (when (fboundp #'evil-define-key*)
@@ -41,7 +43,7 @@ BODY is evaluated in an orrient buffer."
         (kbd "gk") #'orrient-timers-forward
         (kbd "gj") #'orrient-timers-backward
         (kbd "gt") #'orrient-timers-goto
-        (kbd "c") #'orrient-timers-copy-waypoint
+        (kbd "y") #'orrient-timers-copy-waypoint
         (kbd "q") #'orrient--quit))
     map)
   "Keymap for `orrient-timers-mode'.")
@@ -57,6 +59,9 @@ For example, if the time is currently 01:04 and
 forward in time by calling `orrient-timers-forward' will snap to
 01:15.")
 
+(defvar orrient-timers--notify-events nil
+  "List of events to be notified when they start.")
+
 
 ;; User functions
 (defun orrient-timers-forward (&optional step)
@@ -67,9 +72,9 @@ Specify STEP to forward by that amount instead."
   (let ((step (or step orrient-timers-skip-step))
         (time (orrient-timers--time)))
     (orrient-timers--update
-     (% (if orrient-timers-snap-to-step
-            (* (1+ (/ time step)) step)
-          (+ time step)) 1440))))
+     (if orrient-timers-snap-to-step
+         (* (1+ (/ time step)) step)
+       (+ time step)))))
 
 (defun orrient-timers-backward (&optional step)
   "Skip backward in time by `orrient-timers-skip-step'.
@@ -99,17 +104,35 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
   (orrient-timers--timer-cancel)
   (orrient-timers--update time))
 
-(defun orrient-timers-copy-waypoint (point)
-  (interactive "d")
-  (if-let ((waypoint (thread-first point
-                                   (button-at)
-                                   (button-get 'orrient-event-instance)
-                                   (orrient-event-instance-event)
-                                   (orrient-event-waypoint))))
+(defun orrient-timers--waypoint-copy (event)
+  (if-let ((waypoint (orrient-event-waypoint event)))
       (progn
         (kill-new waypoint)
         (message "orrient: Copied %s to clipboard" waypoint))
     (message "orrient: This event has no waypoint")))
+
+(defun orrient-timers-copy-waypoint (point)
+  (interactive "d")
+  (orrient-timers--waypoint-copy
+   (thread-first point
+                 (button-at)
+                 (button-get 'orrient-event-instance)
+                 (orrient-event-instance-event))))
+
+(defun orrient-timers-watch-event (point)
+  (interactive "d")
+  (let ((event-name (thread-first point
+                                  (button-at)
+                                  (button-get 'orrient-event-instance)
+                                  (orrient-event-instance-event)
+                                  (orrient-event-name))))
+    (if (member event-name orrient-timers--notify-events)
+        (progn
+          (setq orrient-timers--notify-events
+                (remove event-name orrient-timers--notify-events))
+          (message "orrient: No longer notify when %s starts" event-name))
+      (add-to-list 'orrient-timers--notify-events event-name)
+      (message "orrient: Notify when %s starts" event-name))))
 
 ;;;###autoload
 (defun orrient-timers-open (&optional interactive)
@@ -177,6 +200,21 @@ If non-nil, then a `run-with-timer' timer is active.")
   (let ((time (decode-time nil t nil)))
     (+ (* 60 (decoded-time-hour time))
        (decoded-time-minute time))))
+
+(defun orrient-timers--notify-event-started (event)
+  (notifications-notify :title (format "%s has started!" (orrient-event-name event))
+                        :app-name "Emacs Orrient"
+                        :actions '("copy" "Copy waypoint")
+                        :on-action (lambda (_id _action)
+                                     (orrient-timers--waypoint-copy event))))
+
+(defun orrient-timers--notify-event-soon (event)
+  (notifications-notify :title (format "%s is starting soon!" (orrient-event-name event))
+                        :urgency 'low
+                        :app-name "Emacs Orrient"
+                        :actions '("copy" "Copy waypoint")
+                        :on-action (lambda (_id _action)
+                                     (orrient-timers--waypoint-copy event))))
 
 
 ;; Faces
@@ -397,17 +435,27 @@ TIME in minutes from UTC 0."
                                name-lengths
                                nil))))))
 
-(defun orrient-timers--event-entry (event-instance time)
+(defun orrient-timers--event-entry (event-instance)
   "Generate an event entry for a tabulated list.
 EVENT-INSTANCE is the cl-struct `orrient-event-instance.'
 
 TIME is used to calculate the eta for EVENT-INSTANCE."
-  (let ((event (orrient-event-instance-event event-instance))
-        (minutes-until (- (orrient-event-instance-start event-instance) time)))
-    (cons (orrient-timers--format-event (orrient-event-name event) minutes-until)
-          `(action orrient-timers--button-event
-            orrient-event-instance ,event-instance
-            face ,(orrient-timers--get-countdown-face minutes-until)))))
+  (let* ((event (orrient-event-instance-event event-instance))
+         (event-name (orrient-event-name event))
+         (minutes-until (- (orrient-event-instance-start event-instance)
+                           (orrient-timers--current-time))))
+    (when (member event-name orrient-timers--notify-events)
+      (cond ((= 15 minutes-until)
+             (orrient-timers--notify-event-soon event))
+            ((>= 0 minutes-until)
+             (orrient-timers--notify-event-started event)
+             (setq orrient-timers--notify-events
+                   (remove event-name orrient-timers--notify-events)))
+            (t nil)))
+    (cons (orrient-timers--format-event event-name minutes-until)
+          `(action                 orrient-timers--button-event
+                                   orrient-event-instance ,event-instance
+                                   face                   ,(orrient-timers--get-countdown-face minutes-until)))))
 
 (defun orrient-timers--entries (time)
   "Returns all entries in tabulated list at TIME."
@@ -422,9 +470,9 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
                      (cons (orrient-schedule--meta-category-name meta-category)
                            `(face ,(orrient-timers--get-category-face meta-category)
                                   orrient-category-id ,meta-category))
-                     (orrient-timers--event-entry (iter-next meta-iter) time)
-                     (orrient-timers--event-entry (iter-next meta-iter) time)
-                     (orrient-timers--event-entry (iter-next meta-iter) time)))))
+                     (orrient-timers--event-entry (iter-next meta-iter))
+                     (orrient-timers--event-entry (iter-next meta-iter))
+                     (orrient-timers--event-entry (iter-next meta-iter))))))
    orrient-schedule))
 
 (defun orrient-timers--update (time)
