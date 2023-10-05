@@ -130,9 +130,9 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
         (progn
           (setq orrient-timers--notify-events
                 (remove event-name orrient-timers--notify-events))
-          (message "orrient: No longer notify when %s starts" event-name))
+          (message "orrient: Disabled notification when %s starts" event-name))
       (add-to-list 'orrient-timers--notify-events event-name)
-      (message "orrient: Notify when %s starts" event-name))
+      (message "orrient: Enabled notification when %s starts" event-name))
     (orrient-timers--update orrient-timers-time)))
 
 ;;;###autoload
