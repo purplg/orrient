@@ -17,14 +17,19 @@
 (require 'orrient)
 (require 'orrient-schedule)
 
-(defvar orrient-timers-buffer-suffix "timers"
-  "Suffix used for naming `orrient-timer' buffers.")
+(defcustom orrient-timers-skip-step 5
+  "Amount of time to skip when stepping forward or backwards in time."
+  :group 'orrient
+  :type 'integer)
 
-(defmacro orrient-timers--with-buffer (&rest body)
-  "Like `with-current-buffer' but with an `orrient-' buffer namespace.
-BODY is evaluated in an orrient buffer."
-  `(orrient--with-buffer ,orrient-timers-buffer-suffix
-    ,@body))
+(defcustom orrient-timers-snap-to-step t
+  "Whether to snap time to `orrient-timers-skip-step' increments.
+For example, if the time is currently 01:04 and
+`orrient-timers-skip-step' is set to the default 15, then going
+forward in time by calling `orrient-timers-forward' will snap to
+01:15."
+  :group 'orreint
+  :type 'boolean)
 
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
@@ -48,22 +53,26 @@ BODY is evaluated in an orrient buffer."
     map)
   "Keymap for `orrient-timers-mode'.")
 
-(defcustom orrient-timers-skip-step 5
-  "Amount of time to skip when stepping forward or backwards in time."
-  :group 'orrient
-  :type 'integer)
-
-(defcustom orrient-timers-snap-to-step t
-  "Whether to snap time to `orrient-timers-skip-step' increments.
-For example, if the time is currently 01:04 and
-`orrient-timers-skip-step' is set to the default 15, then going
-forward in time by calling `orrient-timers-forward' will snap to
-01:15."
-  :group 'orreint
-  :type 'boolean)
+(defvar orrient-timers-buffer-suffix "timers"
+  "Suffix used for naming `orrient-timer' buffers.")
 
 (defvar orrient-timers--notify-events nil
   "List of events to be notified when they start.")
+
+(defvar-local orrient-timers-time nil
+  "The current time rendered in the table.")
+
+(defvar-local orrient-timers--heading-length nil
+  "Length of the longest meta name.")
+
+(defvar-local orrient-timers--event-length 20
+  "Length of the longest event name.")
+
+(defmacro orrient-timers--with-buffer (&rest body)
+  "Like `with-current-buffer' but with an `orrient-' buffer namespace.
+BODY is evaluated in an orrient buffer."
+  `(orrient--with-buffer ,orrient-timers-buffer-suffix
+    ,@body))
 
 
 ;; User functions
@@ -405,15 +414,6 @@ TIME in minutes from UTC 0."
 
 
 ;; Rendering
-(defvar-local orrient-timers-time nil
-  "The current time rendered in the table.")
-
-(defvar-local orrient-timers--heading-length nil
-  "Length of the longest meta name.")
-
-(defvar-local orrient-timers--event-length 20
-  "Length of the longest event name.")
-
 (defun orrient-timers--time ()
   "Return the current time being rendered."
   (or orrient-timers-time
