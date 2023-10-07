@@ -49,15 +49,18 @@ BODY is evaluated in an orrient buffer."
   "Keymap for `orrient-timers-mode'.")
 
 (defcustom orrient-timers-skip-step 5
-  "Amount of time to skip when stepping forward or backwards in
-time.")
+  "Amount of time to skip when stepping forward or backwards in time."
+  :group 'orrient
+  :type 'integer)
 
 (defcustom orrient-timers-snap-to-step t
   "Whether to snap time to `orrient-timers-skip-step' increments.
 For example, if the time is currently 01:04 and
 `orrient-timers-skip-step' is set to the default 15, then going
 forward in time by calling `orrient-timers-forward' will snap to
-01:15.")
+01:15."
+  :group 'orreint
+  :type 'boolean)
 
 (defvar orrient-timers--notify-events nil
   "List of events to be notified when they start.")
@@ -105,6 +108,8 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
   (orrient-timers--update time))
 
 (defun orrient-timers--waypoint-copy (event)
+  "Copy the waypoint of EVENT into clipboard.
+EVENT is an orrient-event cl-struct"
   (if-let ((waypoint (orrient-event-waypoint event)))
       (progn
         (kill-new waypoint)
@@ -112,6 +117,7 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
     (message "orrient: This event has no waypoint")))
 
 (defun orrient-timers-copy-waypoint (point)
+  "Copy the waypoint of event at POINT to clipboard."
   (interactive "d")
   (orrient-timers--waypoint-copy
    (thread-first point
@@ -120,6 +126,7 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
                  (orrient-event-instance-event))))
 
 (defun orrient-timers-watch-event (point)
+  "Enable notifications for event at POINT."
   (interactive "d")
   (let ((event-name (thread-first point
                                   (button-at)
@@ -137,7 +144,8 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
 
 ;;;###autoload
 (defun orrient-timers-open (&optional interactive)
-  "Open the event timers buffer."
+  "Open the event timers buffer.
+INTERACTIVE is set only when this command is called interactively."
   (interactive "p")
   (orrient--display-buffer
    (orrient-timers--with-buffer (orrient-timers-mode))
@@ -146,7 +154,7 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
 
 ;; Sorting
 (defun orrient-timers--schedule-sort (entry-a entry-b)
-  "Predicate for `sort' that sorts by the order the meta appears in `orrient-schedule'.
+  "Predicate to sort by the order the meta appears in `orrient-schedule'.
 Return t when ENTRY-A is before ENTRY-B."
   (let ((meta-a (plist-get (cdr (aref (nth 1 entry-a) 0)) 'orrient-meta))
         (meta-b (plist-get (cdr (aref (nth 1 entry-b) 0)) 'orrient-meta)))
@@ -154,7 +162,7 @@ Return t when ENTRY-A is before ENTRY-B."
        (cl-position meta-b orrient-schedule))))
 
 (defun orrient-timers--event-instance-sort (event-column entry-a entry-b)
-  "Predicate for `sort' that sorts events by how soon they will occur next.
+  "Predicate to sort events by how soon they will occur next.
 EVENT-COLUMN is the column index that was sorted.
 
 Return t when ENTRY-A comes before ENTRY-B."
@@ -331,7 +339,9 @@ EVENT is an orrient-event cl-struct of the event that's starting."
 
 ;; Event prediction
 (defun orrient-timers--event-next (event time)
-  "Returns the next `orrient-event-instance' of EVENT starting from
+  "Return the next `orrient-event-instance' of EVENT starting from.
+EVENT is an orrient-event cl-struct to get the next occurence of.
+
 TIME in minutes from UTC 0."
   (let* ((offset (orrient-event-offset event))
          (frequency (orrient-event-frequency event))
@@ -405,12 +415,13 @@ TIME in minutes from UTC 0."
   "Length of the longest event name.")
 
 (defun orrient-timers--time ()
-  "Returns the current time being rendered."
+  "Return the current time being rendered."
   (or orrient-timers-time
       (orrient-timers--current-time)))
 
 (defun orrient-timers--format-eta (minutes)
-  "Format an ETA shown on an event of its next occurance."
+  "Format an ETA shown on an event of its next occurance.
+MINUTES is the number of minutes to format into a human-readable timestamp."
   (let ((hours (/ minutes 60))
         (minutes (% minutes 60)))
     ;; 6 is select here because the longest possible time between events is 2
@@ -421,7 +432,10 @@ TIME in minutes from UTC 0."
                     (format "%02dm" minutes)))))
 
 (defun orrient-timers--format-event (event-name minutes-until)
-  "Format an event of its next occurance."
+  "Format an event of its next occurance.
+EVENT-NAME is the name of event to format.
+
+MINUTES-UNTIL is the number of minutes until the event starts."
   (format "%s %s" (orrient-timers--format-eta minutes-until) event-name))
 
 (defun orrient-timers--heading-length ()
@@ -463,7 +477,7 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
                                    face                   ,(orrient-timers--get-countdown-face minutes-until)))))
 
 (defun orrient-timers--entries (time)
-  "Returns all entries in tabulated list at TIME."
+  "Return all entries in tabulated list at TIME."
   (mapcar
    (lambda (meta)
      (let* ((meta-name (orrient-meta-name meta))
