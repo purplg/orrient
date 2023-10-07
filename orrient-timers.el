@@ -203,6 +203,8 @@ If non-nil, then a `run-with-timer' timer is active.")
        (decoded-time-minute time))))
 
 (defun orrient-timers--notify-event-started (event)
+  "Send a notification for an event has started.
+EVENT is an orrient-event cl-struct of the event that's started."
   (notifications-notify :title (format "%s has started!" (orrient-event-name event))
                         :app-name "Emacs Orrient"
                         :actions '("copy" "Copy waypoint")
@@ -210,6 +212,8 @@ If non-nil, then a `run-with-timer' timer is active.")
                                      (orrient-timers--waypoint-copy event))))
 
 (defun orrient-timers--notify-event-soon (event)
+  "Send a notification for an event that's about to start.
+EVENT is an orrient-event cl-struct of the event that's starting."
   (notifications-notify :title (format "%s is starting soon!" (orrient-event-name event))
                         :urgency 'low
                         :app-name "Emacs Orrient"
