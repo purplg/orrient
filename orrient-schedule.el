@@ -289,5 +289,10 @@
  :events
  '(("Defense of Amnytas"                 :offset ( 0  0) :frequency ( 2  0) :length ( 0 25) :waypoint "[&BDQOAAA=]")))
 
+(orrient-schedule--add "Convergences"
+ :category 'secrets-of-the-obscure
+ :events
+ '(("Convergences"                       :offset ( 1 30) :frequency ( 3  0) :length ( 0 10) :waypoint nil)))
+
 (provide 'orrient-schedule)
 ;;; orrient-schedule.el ends here
