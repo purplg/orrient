@@ -1,7 +1,7 @@
 ;;; orrient-meta.el --- Meta information for GW2 -*- lexical-binding: t; -*-
 (require 'cl-lib)
 
-(require 'orrient-data)
+(require 'orrient-schedule)
 (require 'orrient-timers)
 
 (defvar orrient-meta--buffer-suffix-format "meta: %s")

@@ -1,7 +1,7 @@
 ;;; orrient-event.el --- Event information for GW2 -*- lexical-binding: t; -*-
 (require 'cl-lib)
 
-(require 'orrient-data)
+(require 'orrient-schedule)
 (require 'orrient-timers)
 
 (defvar orrient-event--buffer-suffix-format "event: %s")
