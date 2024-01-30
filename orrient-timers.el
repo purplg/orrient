@@ -312,12 +312,12 @@ EVENT is an orrient-event cl-struct of the event that's starting."
 
 ;;; Countdown
 (defface orrient-timers-countdown-now
-  '((t (:inherit 'error)))
+  '((t (:inherit error)))
   "Orrient face for time remaining when an event is happening now."
   :group 'orrient)
 
 (defface orrient-timers-countdown-soon
-  '((t (:inherit 'warning)))
+  '((t (:inherit warning)))
   "Orrient face for time remaining when an event is happening soon."
   :group 'orrient)
 
