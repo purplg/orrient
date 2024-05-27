@@ -137,18 +137,18 @@ EVENT is an orrient-event cl-struct"
 (defun orrient-timers-watch-event (point)
   "Enable notifications for event at POINT."
   (interactive "d")
-  (let ((event-name (thread-first point
+  (let ((event-instance (thread-first point
                                   (button-at)
-                                  (button-get 'orrient-event-instance)
-                                  (orrient-event-instance-event)
-                                  (orrient-event-name))))
-    (if (member event-name orrient-timers--notify-events)
+                                  (button-get 'orrient-event-instance))))
+    (if (member event-instance orrient-timers--notify-events)
         (progn
           (setq orrient-timers--notify-events
-                (remove event-name orrient-timers--notify-events))
-          (message "orrient: Disabled notification when %s starts" event-name))
-      (add-to-list 'orrient-timers--notify-events event-name)
-      (message "orrient: Enabled notification when %s starts" event-name))
+                (remove event-instance orrient-timers--notify-events))
+          (message "orrient: Disabled notification when %s starts"
+                   (orrient-event-name (orrient-event-instance-event event-instance))))
+      (add-to-list 'orrient-timers--notify-events event-instance)
+      (message "orrient: Enabled notification when %s starts"
+               (orrient-event-name (orrient-event-instance-event event-instance))))
     (orrient-timers--update orrient-timers-time)))
 
 ;;;###autoload
@@ -326,6 +326,28 @@ EVENT is an orrient-event cl-struct of the event that's starting."
   "Orrient face for time remaining when an event is not happening soon."
   :group 'orrient)
 
+(defface orrient-timers-countdown-soon-watched
+  '((t (:inverse-video t
+        :inherit 'orrient-timers-countdown-soon)))
+  "Orrient face for time remaining when an event is happening soon."
+  :group 'orrient)
+
+(defface orrient-timers-countdown-later-watched
+  '((t (:inverse-video t
+        :inherit orrient-timers-countdown-later)))
+  "Orrient face for time remaining when an event is not happening soon."
+  :group 'orrient)
+
+(defun orrient-timers--get-event-instance-face (event-instance minutes)
+  "Return the face used when MINUTES remain."
+  (cond ((<= minutes 0) 'orrient-timers-countdown-now)
+        ((< minutes 15) (if (member event-instance orrient-timers--notify-events)
+                            'orrient-timers-countdown-soon-watched
+                          'orrient-timers-countdown-soon))
+        (t (if (member event-instance orrient-timers--notify-events)
+               'orrient-timers-countdown-later-watched
+             'orrient-timers-countdown-later))))
+
 (defun orrient-timers--get-countdown-face (minutes)
   "Return the face used when MINUTES remain."
   (cond ((<= minutes 0) 'orrient-timers-countdown-now)
@@ -436,7 +458,9 @@ MINUTES is the number of minutes to format into a human-readable timestamp."
 EVENT-NAME is the name of event to format.
 
 MINUTES-UNTIL is the number of minutes until the event starts."
-  (format "%s %s" (orrient-timers--format-eta minutes-until) event-name))
+  (format "%s %s"
+          (orrient-timers--format-eta minutes-until)
+          event-name))
 
 (defun orrient-timers--heading-length ()
   "Calculate the longest meta name length."
@@ -463,18 +487,22 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
          (event-name (orrient-event-name event))
          (minutes-until (- (orrient-event-instance-start event-instance)
                            (orrient-timers--current-time))))
-    (when (member event-name orrient-timers--notify-events)
+
+    ;; Notify when watched event is approaching.
+    (when (member event-instance orrient-timers--notify-events)
       (cond ((= 15 minutes-until)
              (orrient-timers--notify-event-soon event))
             ((>= 0 minutes-until)
              (orrient-timers--notify-event-started event)
              (setq orrient-timers--notify-events
-                   (remove event-name orrient-timers--notify-events)))
+                   (remove event-instance orrient-timers--notify-events)))
             (t nil)))
-    (cons (orrient-timers--format-event event-name minutes-until)
-          `(action                 orrient-timers--button-event
-                                   orrient-event-instance ,event-instance
-                                   face                   ,(orrient-timers--get-countdown-face minutes-until)))))
+
+    (cons (orrient-timers--format-event (orrient-event-name (orrient-event-instance-event event-instance))
+                                        minutes-until)
+          `(action orrient-timers--button-event
+                   orrient-event-instance ,event-instance
+                   face                   ,(orrient-timers--get-event-instance-face event-instance minutes-until)))))
 
 (defun orrient-timers--entries (time)
   "Return all entries in tabulated list at TIME."
