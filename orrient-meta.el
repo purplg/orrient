@@ -79,7 +79,7 @@ META is an `orrient-meta' to be rendered.
 
 TIME is the amount of minutes offset from UTC 0."
   (erase-buffer)
-  (insert (propertize (orrient-meta-name meta) 'face 'info-title-1))
+  (insert (propertize (orrient-meta-name meta) 'face 'outline-1))
   (let ((iter (orrient-timers--meta-iter meta time)))
     ; fill the window with events
     (cl-loop while (< (line-number-at-pos (point))
