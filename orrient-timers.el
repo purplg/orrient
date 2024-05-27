@@ -43,6 +43,7 @@ forward in time by calling `orrient-timers-forward' will snap to
     (define-key map [backtab] #'widget-backward)
     (when (fboundp #'evil-define-key*)
       (evil-define-key* 'normal map
+        (kbd "/") #'orrient-event-open
         (kbd "]") #'orrient-timers-forward
         (kbd "[") #'orrient-timers-backward
         (kbd "gk") #'orrient-timers-forward
