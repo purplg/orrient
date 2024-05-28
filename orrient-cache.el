@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS achievements(
 );
 "))
 
+
+;; Achievements
+
 (defun orrient-cache--insert-achievement (achievement timestamp)
   "Cache an achievement.
 ACHIEVEMENT is a single achievement.
@@ -55,6 +58,48 @@ TIMESTAMP is `decoded-time' struct of the time the ACHIEVEMENT was requested."
                             (orrient-api-achievement-id achievement)
                             (string-replace "\"" "''" (orrient-api-achievement-name achievement))
                             (string-replace "\"" "''" (json-serialize (apply #'vector bits)))))))
+
+(defun orrient-cache--get-achievement (id)
+  "Return the achievement with the id ID."
+  (when-let ((result (car (sqlite-select
+                           (orrient-cache--db)
+                           (format "SELECT * FROM achievements WHERE id=%d"
+                                   id)))))
+    (make-orrient-api-achievement
+     :id (pop result)
+     :name (pop result)
+     :bits (let ((json (pop result)))
+             (mapcar
+              (lambda (bit)
+                (make-orrient-api-achievement-bit
+                 :id (gethash "id" bit)
+                 :type (gethash "type" bit)
+                 :text (gethash "text" bit))        )
+              (json-parse-string
+               (string-replace "''" "\"" json)
+               :array-type 'list))))))
+
+(defun orrient-cache--get-achievements (&optional ids)
+  "Return all the achievements with the list of id's in IDS."
+  (if ids
+      (seq-map
+       (lambda (result)
+         (make-orrient-api-achievement :id (pop result) :name (pop result)))
+       (sqlite-select (orrient-cache--db)
+                      (concat "SELECT * FROM achievements WHERE id IN ( "
+                              (string-join (mapcar #'prin1-to-string ids)
+                                           ", ")
+                              " )")))
+    (seq-map
+       (lambda (result)
+         (make-orrient-api-achievement :id (pop result) :name (pop result)))
+       (sqlite-select (orrient-cache--db)
+                      "SELECT * FROM achievements"))))
+
+
+;; Dailies
+
+;; TODO Obsolete. Replace with Wizard's Vault
 
 (defun orrient-cache--insert-daily (daily timestamp)
   "Cache a daily.
@@ -102,43 +147,6 @@ TYPE is either `pve', `pvp', `wvw', `fractals', or `special'."
                              :type (intern (pop daily))))
    (sqlite-select (orrient-cache--db)
                   (format "SELECT * FROM dailies WHERE TYPE='%s'" type))))
-
-(defun orrient-cache--get-achievement (id)
-  "Return the achievement with the id ID."
-  (when-let ((result (car (sqlite-select
-                           (orrient-cache--db)
-                           (format "SELECT * FROM achievements WHERE id=%d"
-                                   id)))))
-    (make-orrient-api-achievement
-     :id (pop result)
-     :name (pop result)
-     :bits (let ((json (pop result)))
-             (mapcar
-              (lambda (bit)
-                (make-orrient-api-achievement-bit
-                 :id (gethash "id" bit)
-                 :type (gethash "type" bit)
-                 :text (gethash "text" bit))        )
-              (json-parse-string
-               (string-replace "''" "\"" json)
-               :array-type 'list))))))
-
-(defun orrient-cache--get-achievements (&optional ids)
-  "Return all the achievements with the list of id's in IDS."
-  (if ids
-      (seq-map
-       (lambda (result)
-         (make-orrient-api-achievement :id (pop result) :name (pop result)))
-       (sqlite-select (orrient-cache--db)
-                      (concat "SELECT * FROM achievements WHERE id IN ( "
-                              (string-join (mapcar #'prin1-to-string ids)
-                                           ", ")
-                              " )")))
-    (seq-map
-       (lambda (result)
-         (make-orrient-api-achievement :id (pop result) :name (pop result)))
-       (sqlite-select (orrient-cache--db)
-                      "SELECT * FROM achievements"))))
 
 (provide 'orrient-cache)
 ;;; orrient-cache.el ends here

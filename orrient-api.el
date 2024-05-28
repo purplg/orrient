@@ -13,11 +13,20 @@
                                    (dailies-tomorrow . "v2/achievements/daily/tomorrow")
                                    (items . "v2/items")))
 
-
-;; STRUCTS
+(defun orrient-api--request (path handler cached &optional callback)
+  "Make a request to the GW2 API.
+PATH is the full endpoint path to query.
 
-;; These are typically response objects based on the GW2
-;; API. `https://wiki.guildwars2.com/wiki/API:Main'
+CACHED is a list of items to be append to the result of the API
+query."
+  (let ((url (concat orrient-api--url path)))
+    (message "ORRIENT API REQUEST: %s" url)
+    (plz 'get url
+      :as 'response
+      :then (lambda (response) (funcall handler response cached callback)))))
+
+
+;; Achievements
 
 (cl-defstruct orrient-api-achievement
   "A single achievement."
@@ -31,43 +40,6 @@
   id
   type
   text)
-
-(cl-defstruct orrient-api-daily
-  "A single daily achievement.
-
-Every daily is an achievement, but most achievements are not
-dailies.
-
-This is only created and for use with the `orrinet-api-dailies'
-struct."
-  achievement
-  level-min
-  level-max
-  required-access
-  type)
-
-(cl-defstruct orrient-api-dailies
-  "All the dailies for a specific day.
-
-The PVE, PVP, WVW, FRACTALS, and SPECIAL fields are each a list
-of `orrient-api-daily''s."
-  pve
-  pvp
-  wvw
-  fractals
-  special)
-
-(cl-defstruct orrient-api-item
-  "An in-game item.
-
-Usually used for achievement rewards."
-  id
-  name)
-
-
-;; REQUESTS
-
-;; Send API request to the relevant GW2 API endpoints.
 
 (defun orrient-api--achievements (ids &optional callback)
   "Retrieve data about achievements.
@@ -116,6 +88,70 @@ ID is achievement id to resolve."
                   (when (< page page-total)
                     (orrient-api--populate-achievements (1+ page)))))))))
 
+(defun orrient-api--parse-achievement-page (response page)
+  "Used by `orrient-api--achievements' to parse a response from the
+GW2 API.
+
+See: `https://wiki.guildwars2.com/wiki/API:2/achievements'"
+  (let ((body (plz-response-body response)))
+    (dolist (achievement (seq-map (lambda (achievement)
+                                    (make-orrient-api-achievement
+                                     :id (gethash "id" achievement)
+                                     :name (gethash "name" achievement)))
+                                  (json-parse-string body)))
+      (orrient-cache--insert-achievement achievement (decode-time)))))
+
+(defun orrient-api--handler-achievements (response cached callback)
+  "Caches the parsed response from the GW2 achievements endpoint and
+dispatches the callback."
+  (let* ((fetched (and response
+                       (thread-first response
+                                     (plz-response-body)
+                                     (json-parse-string :array-type 'list)))))
+    (dolist (achievement fetched)
+      (let ((cheeve (make-orrient-api-achievement
+                     :id (gethash "id" achievement)
+                     :bits (thread-last (gethash "bits" achievement)
+                                        (mapcar (lambda (bit)
+                                                  (make-orrient-api-achievement-bit
+                                                   :id (gethash "id" bit)
+                                                   :type (gethash "type" bit)
+                                                   :text (gethash "text" bit)))))
+                     :name (gethash "name" achievement))))
+        (orrient-cache--insert-achievement cheeve (decode-time))))
+    (when callback
+      (funcall callback (append fetched cached)))))
+
+
+;; Dailies
+
+;; TODO Obsolete. Replace with Wizard's Vault
+
+(cl-defstruct orrient-api-daily
+  "A single daily achievement.
+
+Every daily is an achievement, but most achievements are not
+dailies.
+
+This is only created and for use with the `orrinet-api-dailies'
+struct."
+  achievement
+  level-min
+  level-max
+  required-access
+  type)
+
+(cl-defstruct orrient-api-dailies
+  "All the dailies for a specific day.
+
+The PVE, PVP, WVW, FRACTALS, and SPECIAL fields are each a list
+of `orrient-api-daily''s."
+  pve
+  pvp
+  wvw
+  fractals
+  special)
+
 (defun orrient-api--dailies (&optional callback)
   "Retrieve data about todays dailies."
   (let ((cached (orrient-cache--get-dailies)))
@@ -132,37 +168,6 @@ ID is achievement id to resolve."
                               #'orrient-api--handler-dailies
                               nil
                               callback)))))
-
-(defun orrient-api--request (path handler cached &optional callback)
-  "Make a request to the GW2 API.
-PATH is the full endpoint path to query.
-
-CACHED is a list of items to be append to the result of the API
-query."
-  (let ((url (concat orrient-api--url path)))
-    (message "ORRIENT API REQUEST: %s" url)
-    (plz 'get url
-      :as 'response
-      :then (lambda (response) (funcall handler response cached callback)))))
-
-
-;; PARSERS
-
-;; A parser takes no arguments and is expected to be called in the buffer with
-;; the response payload to utilize `json-parse-buffer'
-
-(defun orrient-api--parse-achievement-page (response page)
-  "Used by `orrient-api--achievements' to parse a response from the
-GW2 API.
-
-See: `https://wiki.guildwars2.com/wiki/API:2/achievements'"
-  (let ((body (plz-response-body response)))
-    (dolist (achievement (seq-map (lambda (achievement)
-                                    (make-orrient-api-achievement
-                                     :id (gethash "id" achievement)
-                                     :name (gethash "name" achievement)))
-                                  (json-parse-string body)))
-      (orrient-cache--insert-achievement achievement (decode-time)))))
 
 (defun orrient-api--parse-dailies ()
   "Used by `orrient-api--dailies' to parse a response from the
@@ -197,33 +202,6 @@ and: `https://wiki.guildwars2.com/wiki/API:2/achievements/daily/tomorrow'"
                          (make-orrient-api-daily :achievement (make-orrient-api-achievement :id (gethash "id" daily))
                                                  :type 'special))
                        special))))
-
-
-;; RESPONSE HANDLERS
-
-;; Each response handler must take the achievements fetched from remote, the
-;; cached achievements, and a callback function to send this combined lists.
-
-(defun orrient-api--handler-achievements (response cached callback)
-  "Caches the parsed response from the GW2 achievements endpoint and
-dispatches the callback."
-  (let* ((fetched (and response
-                       (thread-first response
-                                     (plz-response-body)
-                                     (json-parse-string :array-type 'list)))))
-    (dolist (achievement fetched)
-      (let ((cheeve (make-orrient-api-achievement
-                     :id (gethash "id" achievement)
-                     :bits (thread-last (gethash "bits" achievement)
-                                        (mapcar (lambda (bit)
-                                                  (make-orrient-api-achievement-bit
-                                                   :id (gethash "id" bit)
-                                                   :type (gethash "type" bit)
-                                                   :text (gethash "text" bit)))))
-                     :name (gethash "name" achievement))))
-        (orrient-cache--insert-achievement cheeve (decode-time))))
-    (when callback
-      (funcall callback (append fetched cached)))))
 
 (defun orrient-api--handler-dailies (fetched cached callback)
   "Caches the parsed response from the GW2 dailies endpoint and
