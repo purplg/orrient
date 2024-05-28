@@ -21,21 +21,19 @@
     (sqlite-close orrient-cache--db)
     (setq orrient-cache--db nil)))
 
+(defun orrient-cache--clear ()
+  "Delete all data in cache"
+  (sqlite-execute (orrient-cache--db) "
+DROP TABLE IF EXISTS achievements;
+"))
+
 (defun orrient-cache--init ()
   "Initialize the Orrient caching database."
   (sqlite-execute (orrient-cache--db) "
-DROP TABLE IF EXISTS dailies; // TODO Remove this. For dev purposes only
-CREATE TABLE dailies(
-  ID   INT  PRIMARY KEY NOT NULL,
-  TYPE TEXT             NOT NULL
-);
-")
-
-  (sqlite-execute (orrient-cache--db) "
-DROP TABLE IF EXISTS achievements; // TODO Remove this. For dev purposes only
-CREATE TABLE achievements(
-  ID   INT  PRIMARY KEY NOT NULL,
-  NAME TEXT             NOT NULL
+CREATE TABLE IF NOT EXISTS achievements(
+  ID   INTEGER PRIMARY KEY NOT NULL,
+  NAME TEXT                NOT NULL,
+  BITS TEXT
 );
 "))
 
@@ -44,10 +42,19 @@ CREATE TABLE achievements(
 ACHIEVEMENT is a single achievement.
 
 TIMESTAMP is `decoded-time' struct of the time the ACHIEVEMENT was requested."
-  (sqlite-execute (orrient-cache--db)
-    (format "INSERT OR REPLACE INTO achievements VALUES (%d, \"%s\");"
-            (orrient-api-achievement-id achievement)
-            (orrient-api-achievement-name achievement))))
+  (let* ((bits (mapcar (lambda (bit)
+                         (let ((id (orrient-api-achievement-bit-id bit))
+                               (type (orrient-api-achievement-bit-type bit))
+                               (text (orrient-api-achievement-bit-text bit)))
+                           (let ((result `(:id ,id :type ,type)))
+                             (when (append `(:text ,text)))
+                             result)))
+                       (orrient-api-achievement-bits achievement))))
+    (sqlite-execute (orrient-cache--db)
+                    (format "INSERT OR REPLACE INTO achievements (ID,NAME,BITS) VALUES (%d,\"%s\",\"%s\");"
+                            (orrient-api-achievement-id achievement)
+                            (string-replace "\"" "''" (orrient-api-achievement-name achievement))
+                            (string-replace "\"" "''" (json-serialize (apply #'vector bits)))))))
 
 (defun orrient-cache--insert-daily (daily timestamp)
   "Cache a daily.
@@ -98,21 +105,40 @@ TYPE is either `pve', `pvp', `wvw', `fractals', or `special'."
 
 (defun orrient-cache--get-achievement (id)
   "Return the achievement with the id ID."
-  (when-let ((result (car (sqlite-select (orrient-cache--db)
-                                         (format "SELECT * FROM achievements WHERE id=%d"
-                                                 id)))))
-    (make-orrient-api-achievement :id (pop result) :name (pop result))))
+  (when-let ((result (car (sqlite-select
+                           (orrient-cache--db)
+                           (format "SELECT * FROM achievements WHERE id=%d"
+                                   id)))))
+    (make-orrient-api-achievement
+     :id (pop result)
+     :name (pop result)
+     :bits (let ((json (pop result)))
+             (mapcar
+              (lambda (bit)
+                (make-orrient-api-achievement-bit
+                 :id (gethash "id" bit)
+                 :type (gethash "type" bit)
+                 :text (gethash "text" bit))        )
+              (json-parse-string
+               (string-replace "''" "\"" json)
+               :array-type 'list))))))
 
-(defun orrient-cache--get-achievements (ids)
+(defun orrient-cache--get-achievements (&optional ids)
   "Return all the achievements with the list of id's in IDS."
-  (seq-map
-   (lambda (result)
-     (make-orrient-api-achievement :id (pop result) :name (pop result)))
-   (sqlite-select (orrient-cache--db)
-                  (concat "SELECT * FROM achievements WHERE id IN ( "
-                          (string-join (mapcar #'prin1-to-string ids)
-                                       ", ")
-                          " )"))))
+  (if ids
+      (seq-map
+       (lambda (result)
+         (make-orrient-api-achievement :id (pop result) :name (pop result)))
+       (sqlite-select (orrient-cache--db)
+                      (concat "SELECT * FROM achievements WHERE id IN ( "
+                              (string-join (mapcar #'prin1-to-string ids)
+                                           ", ")
+                              " )")))
+    (seq-map
+       (lambda (result)
+         (make-orrient-api-achievement :id (pop result) :name (pop result)))
+       (sqlite-select (orrient-cache--db)
+                      "SELECT * FROM achievements"))))
 
 (provide 'orrient-cache)
 ;;; orrient-cache.el ends here
