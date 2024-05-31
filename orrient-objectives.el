@@ -37,13 +37,23 @@ BODY is evaluated in an orrient buffer."
   "Write the tracked objectives in the current buffer."
   (if-let ((achievement (orrient-cache--get-achievement achievement-id)))
       (progn
-        (insert (propertize (orrient-api-achievement-name achievement) 'face 'info-title-1))
-        (dolist (bit (orrient-api-achievement-bits achievement))
+        (insert (propertize (slot-value achievement :name) 'face 'info-title-1))
+        (dolist (bit (slot-value achievement :bits))
           (insert
-           (pcase (orrient-api-achievement-bit-type bit)
-             (item (format "\nitem: %d" (orrient-api-achievement-bit-id bit)))
-             (text (format "\ntext: %s" (orrient-api-achievement-bit-text bit))))))
-        
+           (pcase (slot-value bit :type)
+             ("Item" (if-let* ((item-id (slot-value bit :id))
+                               (item (orrient-cache--get-item item-id))
+                               (name (slot-value item :name)))
+                         (format "\n  - [%s] %s (%d)"
+                                 (if (orrient-api-item-discovered item) "x" " ")
+                                 name
+                                 item-id)
+                       (format "\nLoading item: %d" item-id)
+                       (orrient-api--item item-id
+                                          (lambda (&rest _)
+                                            (orrient-objectives-open)))))
+             ("Text" (format "\ntext: %s" (slot-value bit :text)))
+             (_ "\nError"))))
         (insert ?\n ?\n))
     (insert (format "Achievement id #%s Loading..." achievement-id))
     (orrient-api--achievement achievement-id
@@ -56,12 +66,12 @@ BODY is evaluated in an orrient buffer."
   (interactive)
   (let* ((candidates (seq-map
                       (lambda (achievement)
-                        (cons (orrient-api-achievement-name achievement)
+                        (cons (slot-value achievement :name)
                               achievement))
                       (orrient-cache--get-achievements)))
          (achievement (assoc (completing-read "Achievement: " candidates)
                            candidates)))
-    (orrient-objectives-add-achievement (orrient-api-achievement-id (cdr achievement)))))
+    (orrient-objectives-add-achievement (slot-value (cdr achievement) :id))))
 
 ;;;###autoload
 (defun orrient-objectives-open (&optional interactive)
