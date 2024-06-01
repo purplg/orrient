@@ -140,10 +140,9 @@ respective to the columns in the database.")
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-item)) result)
   (orrient-item
       :id (pop result)
-      :name (pop result)
-      :discovered (pop result)))
+      :name (pop result)))
 
-(cl-defmethod orrient-cache-to-db ((obj orrient-account-achievement))
+(cl-defmethod orrient-cache-to-db ((obj orrient-item))
   (list (slot-value obj :id)
         (slot-value obj :name)))
 

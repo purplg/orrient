@@ -67,6 +67,8 @@
 
 (cl-defgeneric orrient-api--from-response (response))
 
+;; * Achievements
+
 (cl-defmethod orrient-api--from-response ((obj (subclass orrient-achievement)) json)
   (orrient-achievement
    :id (gethash "id" json)
@@ -78,9 +80,6 @@
                                  :type (gethash "type" bit)
                                  :text (gethash "text" bit)))))
    :name (gethash "name" json)))
-
-
-;; Achievements
 
 (defun orrient-api--populate-achievements (&optional page)
   "CALLBACK called for every single achievement returned by the endpoint."
@@ -111,64 +110,12 @@ See: `https://wiki.guildwars2.com/wiki/API:2/achievements'"
                                   (json-parse-string body)))
       (orrient-cache--insert-achievement achievement (decode-time)))))
 
-
-;; Items
+;; * Items
 
-(defun orrient-api--items (ids &optional callback)
-  "Retrieve data about items.
-IDS is list of item ids to resolve."
-  (let* ((cached (orrient-cache--get-items ids))
-         (cached-ids (seq-map (lambda (item)
-                                (orrient-api-item-id item))
-                              cached))
-         (uncached (seq-filter (lambda (item)
-                                 (not (memq item cached-ids)))
-                               ids)))
-    (if uncached
-        (let ((url (concat (alist-get 'items orrient-api--endpoints)
-                            "?ids="
-                            (string-join (mapcar #'prin1-to-string uncached) ","))))
-          (orrient-api--request url
-                                :handler #'orrient-api--handler-items
-                                :callback callback))
-      (orrient-api--handler-items nil
-                                         cached
-                                         callback))))
-
-(defun orrient-api--item (id &optional callback)
-  "Retrieve data about a single item.
-ID is item id to resolve."
-  (orrient-api--items `(,id) callback))
-
-(defun orrient-api--handler-items (response cached callback)
-  "Caches the parsed response from the GW2 items endpoint and
-dispatches the callback."
-  (let* ((fetched (and response
-                       (thread-first response
-                                     (plz-response-body)
-                                     (json-parse-string :array-type 'list)))))
-    (dolist (item fetched)
-      (let ((struct (make-orrient-api-item
-                     :id (gethash "id" item)
-                     :name (gethash "name" item))))
-        (orrient-cache--insert-item struct (decode-time))))
-    (when callback
-      (funcall callback (append fetched cached)))))
-
-(defun orrient-api--discovered-items ()
-  (orrient-api--request (alist-get 'discovered-items orrient-api--endpoints)
-                        #'orrient-api--discovered-items:handler
-                        nil
-                        nil
-                        (lambda (&rest args) (message "args: %s" args))))
-
-(defun orrient-api--discovered-items:handler (response cached callback)
-  ""
-  (let* ((fetched (and response
-                       (thread-first response
-                                     (plz-response-body)
-                                     (json-parse-string :array-type 'list)))))
-    (orrient-cache--set-items-discovered (gethash "items" fetched))))
+(cl-defmethod orrient-api--from-response ((obj (subclass orrient-item)) json)
+  (orrient-item
+   :id (gethash "id" json)
+   :name (gethash "name" json)))
 
 
 ;; Dailies

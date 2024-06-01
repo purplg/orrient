@@ -66,7 +66,7 @@
 
 ;; Items
 
-(defclass orrient-api-item (orrient-api)
+(defclass orrient-item (orrient-api)
   ((id :type number
        :initarg :id
        :documentation

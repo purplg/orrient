@@ -3,6 +3,7 @@
 ;;; Code:
 (require 'orrient)
 (require 'orrient-api)
+(require 'orrient-cache)
 
 (defvar orrient-objectives-mode-map
   (let ((map (make-sparse-keymap)))
@@ -48,8 +49,13 @@ BODY is evaluated in an orrient buffer."
                  (pcase (slot-value bit :type)
                    ("Item" (format "\n  - [%s] %s"
                                    (if (memq i account-bits) "x" " ")
-                                   (let ((bit (nth i achievement-bits)))
-                                     (format "Loading item %d..." (slot-value bit :id)))))
+                                   (if-let ((bit (nth i achievement-bits))
+                                            (item-id (slot-value bit :id))
+                                            (item (orrient-cache--get orrient-item (list item-id)))
+                                            (item (car item)))
+                                       (slot-value item :name)
+                                     (orrient-api--request orrient-item (list item-id) #'pg/nothing)
+                                     (format "Loading item %d..." item-id))))
                    ("Text" (format "\ntext: %s" (slot-value bit :text)))
                    ("Skin" (format "\n  - [%s] %s"
                                    (if (memq i account-bits) "x" " ")
