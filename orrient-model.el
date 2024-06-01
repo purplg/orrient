@@ -3,22 +3,14 @@
 (require 'subr-x)
 (require 'eieio)
 
+(defclass orrient-api ()
+  ""
+  :abstract t)
+
 
 ;; Achievements
 
-(defclass orrient-achievement ()
-  ((id :initarg :id
-       :type number)
-   (name :initarg :name
-         :type string)
-   (bits :initarg :bits
-         :initform '()
-         :type (list-of orrient-achievement-bit))
-   ;; (rewards)
-   )
-  "A single achievement.")
-
-(defclass orrient-achievement-bit ()
+(defclass orrient-achievement-bit (orrient-api)
   ((type :initarg :type
          :type string)
    (id :initarg :id
@@ -29,7 +21,17 @@
          :type (or null string)))
   "A bit in an achievement.")
 
-(defclass orrient-account-achievement ()
+(defclass orrient-achievement (orrient-api)
+  ((id :initarg :id
+       :type number)
+   (name :initarg :name
+         :type string)
+   (bits :initarg :bits
+         :initform '()
+         :type (list-of orrient-achievement-bit)))
+  "A single achievement.")
+
+(defclass orrient-account-achievement (orrient-api)
   ((id :type number
        :initarg :id
        :documentation
@@ -64,7 +66,7 @@
 
 ;; Items
 
-(defclass orrient-api-item ()
+(defclass orrient-api-item (orrient-api)
   ((id :type number
        :initarg :id
        :documentation

@@ -20,20 +20,22 @@
   "Initialize the Orrient caching database."
   (interactive)
   (emacsql (orrient-cache--db)
-           [ :drop-table :if-exists achievements])
+           [ :drop-table :if-exists achievement])
   (emacsql (orrient-cache--db)
-           [ :drop-table :if-exists account_achievements]))
+           [ :drop-table :if-exists account-achievement])
+  (emacsql (orrient-cache--db)
+           [ :drop-table :if-exists item]))
 
 (defun orrient-cache--init ()
   "Initialize the Orrient caching database."
   (interactive)
   (emacsql (orrient-cache--db)
-           [ :create-table :if-not-exists achievements
+           [ :create-table :if-not-exists achievement
              ([(id integer :primary-key)
                (name text)
                (bits object)])])
   (emacsql (orrient-cache--db)
-           [ :create-table :if-not-exists account_achievements
+           [ :create-table :if-not-exists account-achievements
              ([(id integer :primary-key)
                (bits object)
                (current integer)
@@ -42,43 +44,46 @@
                (repeated number)
                (unlocked boolean)])])
   (emacsql (orrient-cache--db)
-           [ :create-table :if-not-exists items
+           [ :create-table :if-not-exists item
              ([(id integer :primary-key)
                (name text :not-null)
                (discovered boolean)])]))
 
-
-;; Achievements
+(cl-defmethod orrient-cache--get ((class (subclass orrient-api)) &rest ids)
+  (let ((table (intern (string-remove-prefix "orrient-" (symbol-name orrient-achievement))))
+        (ids (apply #'vector ids)))
+    (seq-map
+     (lambda (result) (orrient-cache-from-db class result))
+     (emacsql (orrient-cache--db)
+              [ :select * :from $i1
+                :where (in id $v2)]
+              table ids))))
 
-(defun orrient-cache--insert-achievement (achievement timestamp)
-  "Cache an achievement.
-ACHIEVEMENT is a single achievement.
-
-TIMESTAMP is `decoded-time' struct of the time the ACHIEVEMENT was requested."
-  (let* ((id (slot-value achievement :id))
-         (name (slot-value achievement :name))
-         (bits (mapcar (lambda (bit)
-                         (let ((id (slot-value bit :id))
-                               (type (slot-value bit :type))
-                               (text (slot-value bit :text)))
-                           `(:id ,id :type ,type :text, text)))
-                       (slot-value achievement :bits))))
+(cl-defmethod orrient-cache--insert ((obj orrient-api) &rest achievements)
+  (let ((table (intern (string-remove-prefix "orrient-" (symbol-name (eieio-object-class obj)))))
+        (values (thread-last (orrient-cache-to-db obj)
+                             (apply #'vector))))
     (emacsql orrient-cache--db
              [ :insert :or :replace
-               :into achievements
-               :values ([$s1 $s2 $s3])]
-             id name bits)))
+               :into $i1
+               :values ($v2)]
+             table values)))
 
-(defun orrient-cache--get-achievement (id)
-  "Return the achievement with the id ID."
-  (when-let ((result (orrient-cache--get-achievements (list id))))
-    (pop result)))
+(cl-defgeneric orrient-cache-from-db (result)
+  "Implement for EIEIO objects that can be fetched from the database
+  cache.
+RESULT is a sequential list of the fields fetched from the database
+that should be used to construct a new object instance.")
 
-(defun orrient-cache--get-achievements (&optional ids)
-  "Return all the achievements with the list of id's in IDS."
-  (seq-map
-   (lambda (result)
-     (orrient-achievement
+(cl-defgeneric orrient-cache-to-db ()
+  "Implement for EIEIO objects that can be inserted into the database
+  cache.
+This method should return a sequential list of fields to be inserted
+respective to the columns in the database.")
+
+;; * Achievements
+(cl-defmethod orrient-cache-from-db ((class (subclass orrient-achievement)) result)
+  (orrient-achievement
       :id (pop result)
       :name (pop result)
       :bits (mapcar
@@ -88,36 +93,20 @@ TIMESTAMP is `decoded-time' struct of the time the ACHIEVEMENT was requested."
                 :type (plist-get bit :type)
                 :text (plist-get bit :text)))
              (pop result))))
-   (if ids
-       (emacsql (orrient-cache--db)
-                [ :select * :from achievements
-                  :where (in id $v1)]
-                (apply #'vector ids))
-     (emacsql (orrient-cache--db) [ :select * :from achievements]))))
 
-(defun orrient-cache--insert-account-achievement (account-achievement timestamp)
-  "Cache an account achievement.
-ACCOUNT-ACHIEVEMENT is a single account achievement.
+(cl-defmethod orrient-cache-to-db ((obj orrient-achievement))
+  (list (slot-value obj :id)
+        (slot-value obj :name)
+        (mapcar (lambda (bit)
+                  (let ((id (slot-value bit :id))
+                        (type (slot-value bit :type))
+                        (text (slot-value bit :text)))
+                    `(:id ,id :type ,type :text, text)))
+                (slot-value obj :bits))))
 
-TIMESTAMP is `decoded-time' struct of the time the ACCOUNT-ACHIEVEMENT was requested."
-  (let* ((id (slot-value account-achievement :id))
-         (bits (slot-value account-achievement :bits))
-         (current (slot-value account-achievement :current))
-         (max (slot-value account-achievement :max))
-         (done (slot-value account-achievement :done))
-         (repeated (slot-value account-achievement :repeated))
-         (unlocked (slot-value account-achievement :unlocked)))
-    (emacsql orrient-cache--db
-             [ :insert :or :replace
-               :into account_achievements
-               :values ([$s1 $s2 $s3 $s4 $s5 $s6 $s7])]
-             id bits current max (if done 1 0) repeated unlocked)))
-
-(defun orrient-cache--get-account-achievements (&optional ids)
-  "Return all the achievements with the list of id's in IDS."
-  (seq-map
-   (lambda (result)
-     (orrient-account-achievement
+;; * Account Achievements
+(cl-defmethod orrient-cache-from-db ((class (subclass orrient-account-achievement)) result)
+  (orrient-account-achievement
       :id (pop result)
       :bits (pop result)
       :current (pop result)
@@ -125,58 +114,27 @@ TIMESTAMP is `decoded-time' struct of the time the ACCOUNT-ACHIEVEMENT was reque
       :done (if (= (pop result) 1) t nil)
       :repeated (pop result)
       :unlocked (pop result)))
-   (emacsql (orrient-cache--db)
-            [ :select * :from account_achievements
-              :where (in id $v1)]
-            (apply #'vector ids))))
 
+(cl-defmethod orrient-cache-to-db ((obj orrient-account-achievement))
+  (list (slot-value obj :id)
+        (slot-value obj :bits)
+        (slot-value obj :current)
+        (slot-value obj :max)
+        (slot-value obj :done)
+        (slot-value obj :repeated)
+        (slot-value obj :unlocked)))
 
 
-;; Items
-
-(defun orrient-cache--insert-item (item timestamp)
-  "Cache an item.
-ITEM is a single item.
-
-TIMESTAMP is `decoded-time' struct of the time the ITEM was requested."
-  (let* ((id (slot-value item :id))
-         (name (slot-value item :name))
-         (discovered (slot-value item :discovered)))
-    (emacsql orrient-cache--db
-             [ :insert :or :replace
-               :into item
-               :values ([$s1 $s2 $s3])]
-             id name (if discovered 1 0))))
-
-(defun orrient-cache--get-item (id)
-  "Return the item with ID."
-  (when-let ((result (orrient-cache--get-items (list id))))
-    (pop result)))
-
-(defun orrient-cache--get-items (&optional ids)
-  "Return all the items with IDS."
-  (seq-map
-   (lambda (result)
-     (orrient-item
+;; * Items
+(cl-defmethod orrient-cache-from-db ((class (subclass orrient-item)) result)
+  (orrient-item
       :id (pop result)
       :name (pop result)
       :discovered (pop result)))
-   (if ids
-       (emacsql (orrient-cache--db)
-                [ :select * :from items
-                  :where (in id $v1)]
-                (apply #'vector ids))
-     (emacsql (orrient-cache--db) [ :select * :from items]))))
 
-(defun orrient-cache--set-items-discovered (ids)
-  (sqlite-transaction (orrient-cache--db))
-  (dolist (id ids)
-    (sqlite-execute (orrient-cache--db)
-                    (format "INSERT OR REPLACE INTO items (ID,NAME,DISCOVERED) VALUES (%d,(SELECT name FROM items WHERE id = %d),%s);"
-                            id,
-                            id
-                            "TRUE")))
-  (sqlite-commit (orrient-cache--db)))
+(cl-defmethod orrient-cache-to-db ((obj orrient-account-achievement))
+  (list (slot-value obj :id)
+        (slot-value obj :name)))
 
 
 ;; Dailies
