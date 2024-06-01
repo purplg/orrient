@@ -32,14 +32,15 @@ BODY is evaluated in an orrient buffer."
 (defun orrient-objectives-add-item-amount (item-id quantity)
   ;; TODO
   )
-
 (defun orrient-objectives--render-objective (achievement-id)
   "Write the tracked objectives in the current buffer."
-  (if-let ((achievement (orrient-api--achievement achievement-id)))
+  (if-let ((achievement (orrient-cache--get orrient-achievement (list achievement-id)))
+           (achievement (car achievement)))
       (progn
         (insert (propertize (slot-value achievement :name) 'face 'info-title-1))
         (if-let* ((achievement-bits (slot-value achievement :bits))
-                  (account-achievement (orrient-api--account-achievement achievement-id))
+                  (account-achievement (orrient-cache--get orrient-account-achievement (list achievement-id)))
+                  (account-achievement (car account-achievement))
                   (account-bits (slot-value account-achievement :bits)))
             (let ((i 0))
               (dolist (bit (slot-value achievement :bits))
@@ -57,7 +58,8 @@ BODY is evaluated in an orrient buffer."
                    (_ "\nError")))
                 (setq i (1+ i)))))
         (insert ?\n ?\n))
-    (insert (format "Achievement id #%s Loading..." achievement-id))))
+    (orrient-api--request orrient-achievement (list achievement-id))
+    (insert (propertize (format "Achievement id #%s Loading..." achievement-id) 'face 'info-title-1))))
 
 ;;;###autoload
 (defun orrient-objectives-track ()
@@ -67,7 +69,7 @@ BODY is evaluated in an orrient buffer."
                       (lambda (achievement)
                         (cons (slot-value achievement :name)
                               achievement))
-                      (orrient-cache--get-achievements)))
+                      (orrient-cache--get-all orrient-achievement)))
          (achievement (assoc (completing-read "Achievement: " candidates)
                            candidates)))
     (orrient-objectives-add-achievement (slot-value (cdr achievement) :id))))

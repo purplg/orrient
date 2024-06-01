@@ -3,6 +3,8 @@
 (require 'emacsql)
 (require 'emacsql-sqlite)
 
+(require 'orrient-model)
+
 (defconst orrient-cache--path (expand-file-name "orrient/" user-emacs-directory))
 (defconst orrient-cache--filename "cache.db")
 
@@ -49,11 +51,20 @@
                (name text :not-null)
                (discovered boolean)])]))
 
-(cl-defmethod orrient-cache--get ((class (subclass orrient-api)) &rest ids)
-  (let ((table (intern (string-remove-prefix "orrient-" (symbol-name orrient-achievement))))
-        (ids (apply #'vector ids)))
+(cl-defmethod orrient-cache--get-all ((class (subclass orrient-api)))
+  (let ((table (intern (string-remove-prefix "orrient-" (symbol-name orrient-achievement)))))
     (seq-map
      (lambda (result) (orrient-cache-from-db class result))
+     (emacsql (orrient-cache--db)
+              [ :select * :from $i1]
+              table))))
+
+(cl-defmethod orrient-cache--get ((class (subclass orrient-api)) ids)
+  (let ((table (intern (string-remove-prefix "orrient-" (symbol-name class))))
+        (ids (apply #'vector ids)))
+    (seq-map
+     (lambda (result)
+       (orrient-cache-from-db class result))
      (emacsql (orrient-cache--db)
               [ :select * :from $i1
                 :where (in id $v2)]
