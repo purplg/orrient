@@ -7,9 +7,7 @@
   ""
   :abstract t)
 
-
 ;; Achievements
-
 (defclass orrient-achievement-bit (orrient-api)
   ((type :initarg :type
          :type string)
@@ -31,6 +29,7 @@
          :type (list-of orrient-achievement-bit)))
   "A single achievement.")
 
+;; Account Achievements
 (defclass orrient-account-achievement (orrient-api)
   ((id :type number
        :initarg :id
@@ -63,9 +62,7 @@
              "Whether or not the achievement is unlocked. Note that if this property does not exist, the achievement is unlocked as well."))
   "A single achievement for the configured account.")
 
-
 ;; Items
-
 (defclass orrient-item (orrient-api)
   ((id :type number
        :initarg :id
