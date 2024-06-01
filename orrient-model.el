@@ -64,21 +64,18 @@
 
 ;; Items
 
-(cl-defstruct orrient-api-item
+(defclass orrient-api-item ()
+  ((id :type number
+       :initarg :id
+       :documentation
+       "The item id.")
+   (name :type string
+         :initarg :name
+         :documentation
+         "The item name."))
   "An in-game item.
 
-Usually used for achievement rewards."
-  (id :type number
-      :initarg :id
-      :documentation
-      "The item id.")
-  (name :type string
-        :initarg :name
-        :documentation
-        "The item name.")
-  (discovered :type boolean
-              :initarg :discovered
-              :initform nil))
+Usually used for achievement rewards.")
 
 
 ;; Dailies
