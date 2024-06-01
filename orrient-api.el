@@ -56,7 +56,6 @@ be cached."
             :headers (when (orrient-api--endpoint-auth-p endpoint)
                        `(("Authorization" . ,(concat "Bearer " orrient-api-key))))
             :then (lambda (response)
-                    (message "response: %S" response)
                     (let* ((fetched (thread-first response
                                                   (plz-response-body)
                                                   (json-parse-string :false-object nil

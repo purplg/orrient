@@ -127,7 +127,6 @@ respective to the columns in the database.")
       :unlocked (pop result)))
 
 (cl-defmethod orrient-cache-to-db ((obj orrient-account-achievement))
-  (message "caching: %S" obj)
   (list (slot-value obj :id)
         (slot-value obj :bits)
         (slot-value obj :current)
