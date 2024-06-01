@@ -20,7 +20,10 @@
                                                         :response orrient-account-achievement)
                                    (item :path "v2/items"
                                          :requires-auth nil
-                                         :response orrient-item)))
+                                         :response orrient-item)
+                                   (skin :path "v2/skins"
+                                         :requires-auth nil
+                                         :response orrient-skin)))
 
 (defun orrient-api--endpoint (endpoint)
   (plist-get (alist-get endpoint orrient-api--endpoints) :path))
@@ -138,6 +141,13 @@ See: `https://wiki.guildwars2.com/wiki/API:2/achievements'"
 
 (cl-defmethod orrient-api--from-response ((obj (subclass orrient-item)) json)
   (orrient-item
+   :id (gethash "id" json)
+   :name (gethash "name" json)))
+
+;; * Skins
+
+(cl-defmethod orrient-api--from-response ((obj (subclass orrient-skin)) json)
+  (orrient-skin
    :id (gethash "id" json)
    :name (gethash "name" json)))
 

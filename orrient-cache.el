@@ -48,8 +48,11 @@
   (emacsql (orrient-cache--db)
            [ :create-table :if-not-exists item
              ([(id integer :primary-key)
-               (name text :not-null)
-               (discovered boolean)])]))
+               (name text :not-null)])])
+  (emacsql (orrient-cache--db)
+           [ :create-table :if-not-exists skin
+             ([(id integer :primary-key)
+               (name text :not-null)])]))
 
 (cl-defmethod orrient-cache--get-all ((class (subclass orrient-api)))
   (let ((table (intern (string-remove-prefix "orrient-" (symbol-name orrient-achievement)))))
@@ -142,6 +145,16 @@ respective to the columns in the database.")
       :name (pop result)))
 
 (cl-defmethod orrient-cache-to-db ((obj orrient-item))
+  (list (slot-value obj :id)
+        (slot-value obj :name)))
+
+;; * Skins
+(cl-defmethod orrient-cache-from-db ((class (subclass orrient-skin)) result)
+  (orrient-skin
+      :id (pop result)
+      :name (pop result)))
+
+(cl-defmethod orrient-cache-to-db ((obj orrient-skin))
   (list (slot-value obj :id)
         (slot-value obj :name)))
 

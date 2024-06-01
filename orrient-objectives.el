@@ -48,7 +48,7 @@ BODY is evaluated in an orrient buffer."
               (dolist (bit (slot-value achievement :bits))
                 (insert
                  (pcase (slot-value bit :type)
-                   ("Item" (format "\n  - [%s] %s"
+                   ("Item" (format "\n  - [%s] item | %s"
                                    (if (memq i account-bits) "x" " ")
                                    (if-let ((bit (nth i achievement-bits))
                                             (item-id (slot-value bit :id))
@@ -58,10 +58,15 @@ BODY is evaluated in an orrient buffer."
                                      (orrient-api--request orrient-item (list item-id) #'pg/nothing)
                                      (format "Loading item %d..." item-id))))
                    ("Text" (format "\ntext: %s" (slot-value bit :text)))
-                   ("Skin" (format "\n  - [%s] %s"
+                   ("Skin" (format "\n  - [%s] skin | %s"
                                    (if (memq i account-bits) "x" " ")
-                                   (let ((bit (nth i achievement-bits)))
-                                     (format "Loading skin %d..." (slot-value bit :id)))))
+                                   (if-let ((bit (nth i achievement-bits))
+                                            (skin-id (slot-value bit :id))
+                                            (skin (orrient-cache--get orrient-skin (list skin-id)))
+                                            (skin (car skin)))
+                                       (slot-value skin :name)
+                                     (orrient-api--request orrient-skin (list skin-id) #'pg/nothing)
+                                     (format "Loading skin %d..." skin-id))))
                    (_ "\nError")))
                 (setq i (1+ i)))))
         (insert ?\n ?\n))

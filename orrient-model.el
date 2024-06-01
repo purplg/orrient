@@ -76,6 +76,17 @@
 
 Usually used for achievement rewards.")
 
+;; Skins
+(defclass orrient-skin (orrient-api)
+  ((id :type number
+       :initarg :id
+       :documentation
+       "The skin id.")
+   (name :type string
+         :initarg :name
+         :documentation
+         "The name of the skin."))
+  "An in-game skin.")
 
 ;; Dailies
 
