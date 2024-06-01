@@ -127,15 +127,15 @@ respective to the columns in the database.")
       :unlocked (pop result)))
 
 (cl-defmethod orrient-cache-to-db ((obj orrient-account-achievement))
+  (message "caching: %S" obj)
   (list (slot-value obj :id)
         (slot-value obj :bits)
         (slot-value obj :current)
         (slot-value obj :max)
-        (slot-value obj :done)
+        (if (slot-value obj :done) 1 0)
         (slot-value obj :repeated)
-        (slot-value obj :unlocked)))
+        (if (slot-value obj :unlocked) 1 0)))
 
-
 ;; * Items
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-item)) result)
   (orrient-item
@@ -146,8 +146,7 @@ respective to the columns in the database.")
   (list (slot-value obj :id)
         (slot-value obj :name)))
 
-
-;; Dailies
+;; * Dailies
 
 ;; TODO Obsolete. Replace with Wizard's Vault
 

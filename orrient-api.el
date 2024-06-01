@@ -31,39 +31,54 @@
 (defun orrient-api--endpoint-response-type (endpoint)
   (plist-get (alist-get endpoint orrient-api--endpoints) :response))
 
-(cl-defmethod orrient-api--request ((class (subclass orrient-api)) ids callback)
+(cl-defmethod orrient-api--request ((class (subclass orrient-api)) ids &optional callback)
+  "Retrieve GW2 API data.
+If all IDS are found in the cache then they will immediately be returned.
+
+Otherwise, the CALLBACK (if provided) will be called with the combined
+response, cached and uncached.
+
+All API requests will be cached to the database so future calls will
+be cached."
   (let* ((cached (orrient-cache--get class ids))
          (cached-ids (seq-map (lambda (struct) (slot-value struct :id)) cached))
          (missed (seq-filter (lambda (item) (not (memq item cached-ids))) ids)))
     (if missed
-        (when-let* ((endpoint (intern (string-remove-prefix "orrient-" (symbol-name class))))
-                    (path (orrient-api--endpoint endpoint))
-                    (url (concat orrient-api--url
-                                 path
-                                 "?ids="
-                                 (string-join (mapcar #'number-to-string missed) ","))))
+        (let* ((endpoint (intern (string-remove-prefix "orrient-" (symbol-name class))))
+               (path (orrient-api--endpoint endpoint))
+               (url (concat orrient-api--url
+                            path
+                            "?ids="
+                            (string-join (mapcar #'number-to-string missed) ","))))
           (message "url: %s" url)
           (plz 'get url
             :as 'response
             :headers (when (orrient-api--endpoint-auth-p endpoint)
                        `(("Authorization" . ,(concat "Bearer " orrient-api-key))))
             :then (lambda (response)
+                    (message "response: %S" response)
                     (let* ((fetched (thread-first response
                                                   (plz-response-body)
-                                                  (json-parse-string :array-type 'list)))
+                                                  (json-parse-string :false-object nil
+                                                                     :array-type 'list)))
                            (fetched (mapcar (lambda (item)
                                               (orrient-api--from-response class item))
                                             fetched)))
                       (dolist (item fetched)
-                        (message "caching: %S" (slot-value item :id))
                         (orrient-cache--insert item))
-                      (let ((combined (append fetched cached)))
-                        (funcall callback combined))))
+                      (when callback
+                        (let ((combined (append fetched cached)))
+                          (funcall callback combined)))))
             :else (lambda (err)
                     (let* ((response (plz-error-response err))
                            (code (plz-response-status response)))
-                      (message "error: %s" code)))))
-      (funcall callback cached))))
+                      (message "error: %s" code))))
+          ;; Want to return nil to indicate some items weren't cached
+          ;; and are being fetched.
+          nil)
+      (when callback
+        (funcall callback cached))
+      cached)))
 
 (cl-defgeneric orrient-api--from-response (response))
 
@@ -80,6 +95,16 @@
                                  :type (gethash "type" bit)
                                  :text (gethash "text" bit)))))
    :name (gethash "name" json)))
+
+(cl-defmethod orrient-api--from-response ((obj (subclass orrient-account-achievement)) json)
+  (orrient-account-achievement
+   :id (gethash "id" json)
+   :bits (gethash "bits" json)
+   :current (gethash "current" json)
+   :max (gethash "max" json)
+   :done (gethash "done" json)
+   :repeated (gethash "repeated" json)
+   :unlocked (gethash "unlocked" json)))
 
 (defun orrient-api--populate-achievements (&optional page)
   "CALLBACK called for every single achievement returned by the endpoint."

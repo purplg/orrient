@@ -33,6 +33,7 @@ BODY is evaluated in an orrient buffer."
 (defun orrient-objectives-add-item-amount (item-id quantity)
   ;; TODO
   )
+
 (defun orrient-objectives--render-objective (achievement-id)
   "Write the tracked objectives in the current buffer."
   (if-let ((achievement (orrient-cache--get orrient-achievement (list achievement-id)))
@@ -40,7 +41,7 @@ BODY is evaluated in an orrient buffer."
       (progn
         (insert (propertize (slot-value achievement :name) 'face 'info-title-1))
         (if-let* ((achievement-bits (slot-value achievement :bits))
-                  (account-achievement (orrient-cache--get orrient-account-achievement (list achievement-id)))
+                  (account-achievement (orrient-api--request orrient-account-achievement (list achievement-id)))
                   (account-achievement (car account-achievement))
                   (account-bits (slot-value account-achievement :bits)))
             (let ((i 0))
