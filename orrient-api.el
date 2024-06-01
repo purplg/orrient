@@ -12,27 +12,39 @@
   "")
 
 (defconst orrient-api--url "https://api.guildwars2.com/")
-(defconst orrient-api--endpoints '((achievements . "v2/achievements")
-                                   (account-achievements . "v2/account/achievements")
-                                   (dailies . "v2/achievements/daily")
-                                   (dailies-tomorrow . "v2/achievements/daily/tomorrow")
-                                   (items . "v2/items")
-                                   (discovered-items . "v1/items")))
+(defconst orrient-api--endpoints '((achievements "v2/achievements" nil)
+                                   (account-achievements "v2/account/achievements" t)
+                                   (dailies "v2/achievements/daily" nil)
+                                   (dailies-tomorrow "v2/achievements/daily/tomorrow" nil)
+                                   (items "v2/items" nil)
+                                   (discovered-items "v1/items" nil)))
 
-(defun orrient-api--request (path handler cached requires-auth &optional callback)
+(defun orrient-api--endpoint (endpoint)
+  (concat orrient-api--url
+          (car (alist-get endpoint orrient-api--endpoints))))
+
+(defun orrient-api--endpoint-auth-p (endpoint)
+  (cadr (alist-get endpoint orrient-api--endpoints)))
+
+(cl-defun orrient-api--request (endpoint
+                                &key
+                                query
+                                callback)
   "Make a request to the GW2 API.
 PATH is the full endpoint path to query.
 
-CACHED is a list of items to be append to the result of the API
-query."
-  (let ((url (concat orrient-api--url path)))
+QUERY is the arguments to URL-BUILD-QUERY-STRING to add query
+arguments to the request."
+  (declare (indent defun))
+  (let ((url (if query
+                 (concat (orrient-api--endpoint endpoint) "?" (url-build-query-string query))
+               (orrient-api--endpoint endpoint))))
     (message "url: %s" url)
     (plz 'get url
       :as 'response
-      :headers (when requires-auth
+      :headers (when (orrient-api--endpoint-auth-p endpoint)
                  `(("Authorization" . ,(concat "Bearer " orrient-api-key))))
-      :then (lambda (response)
-              (funcall handler response cached callback))
+      :then callback
       :else (lambda (err)
               (let* ((response (plz-error-response err))
                      (code (plz-response-status response)))
@@ -43,22 +55,24 @@ query."
 
 (defun orrient-api--achievements (ids &optional callback)
   "Retrieve data about achievements.
-IDS is list of achievement ids to resolve."
+IDS is list of achievement ids to resolve.
+
+Will return with result immediately if cached. Otherwise, use CALLBACK
+to get the result asynchronously."
   (let* ((cached (orrient-cache--get-achievements ids))
          (cached-ids (seq-map (lambda (achievement)
                                 (slot-value achievement :id))
                               cached))
-         (uncached (seq-filter (lambda (item)
-                                 (not (memq item cached-ids))))))
-    (if uncached
-        (let ((url (concat (alist-get 'achievements orrient-api--endpoints)
-                           "?ids="
-                           (string-join (mapcar #'prin1-to-string uncached) ","))))
-          (orrient-api--request url
-                                #'orrient-api--achievements:handler
-                                cached
-                                nil
-                                callback))
+         (missed (seq-filter (lambda (item)
+                               (not (memq item cached-ids)))
+                             cached-ids)))
+    (if missed
+        (orrient-api--request 'achievements
+          :callback (lambda (response)
+                      (orrient-api--achievements:handler
+                       response
+                       cached
+                       callback)))
       (orrient-api--achievements:handler nil
                                          cached
                                          callback))))
@@ -66,9 +80,10 @@ IDS is list of achievement ids to resolve."
 (defun orrient-api--achievement (id &optional callback)
   "Retrieve data about a single achievement.
 ID is achievement id to resolve."
-  (orrient-api--achievements `(,id) callback))
+  (when-let ((result (orrient-api--achievements `(,id) callback)))
+    (car result)))
 
-(defun orrient-api--achievements:handler (response cached callback)
+(defun orrient-api--achievements:handler (response &optional cached callback)
   "Caches the parsed response from the GW2 achievements endpoint and
 dispatches the callback."
   (let* ((fetched (and response
@@ -79,6 +94,7 @@ dispatches the callback."
       (let ((struct (orrient-achievement
                      :id (gethash "id" achievement)
                      :bits (thread-last (gethash "bits" achievement)
+                                        (seq-filter (lambda (bit) (gethash "type" bit)))
                                         (mapcar (lambda (bit)
                                                   (orrient-achievement-bit
                                                    :id (gethash "id" bit)
@@ -86,32 +102,28 @@ dispatches the callback."
                                                    :text (gethash "text" bit)))))
                      :name (gethash "name" achievement))))
         (orrient-cache--insert-achievement struct (decode-time))))
-    (when callback
-      (funcall callback (append fetched cached)))))
+    (let ((combined (append fetched cached)))
+      (if callback
+          (funcall callback combined)
+        combined))))
 
 (defun orrient-api--populate-achievements (&optional page)
   "CALLBACK called for every single achievement returned by the endpoint."
   (let ((page (or page 0))
         (page-size 200))
-    (let ((url (format "%s%s?page_size=%s&page=%s"
-                       orrient-api--url
-                       (alist-get 'achievements orrient-api--endpoints)
-                       page-size
-                       page)))
-      (message "ORRIENT API REQUEST: %s" url)
-      (plz 'get
-        url
-        :as 'response
-        :then (lambda (response)
-                (orrient-api--parse-achievement-page response page)
-                (let ((page-total (thread-last response
-                                                (plz-response-headers)
-                                                (alist-get 'x-page-total)
-                                                (string-to-number))))
-                  (when (< page page-total)
-                    (orrient-api--populate-achievements (1+ page)))))))))
+    (orrient-api--request 'achievements
+      :query `(("page_size" ,page-size)
+               ("page" ,page))
+      :callback (lambda (response)
+                  (orrient-api--achievements:handler response)
+                  (let ((page-total (thread-last response
+                                                 (plz-response-headers)
+                                                 (alist-get 'x-page-total)
+                                                 (string-to-number))))
+                    (when (< page page-total)
+                      (orrient-api--populate-achievements (1+ page))))))))
 
-(defun orrient-api--parse-achievement-page (response page)
+(defun orrient-api--parse-achievement-page (response)
   "Used by `orrient-api--achievements' to parse a response from the
 GW2 API.
 
@@ -124,6 +136,12 @@ See: `https://wiki.guildwars2.com/wiki/API:2/achievements'"
                                   (json-parse-string body)))
       (orrient-cache--insert-achievement achievement (decode-time)))))
 
+(defun orrient-api--account-achievement (id &optional callback)
+  "Retrieve account data about a single achievement.
+ID is achievement id to resolve."
+  (when-let ((result (orrient-api--account-achievements `(,id) callback)))
+    (car result)))
+
 (defun orrient-api--account-achievements (ids &optional callback)
   "Retrieve data about achievements for the configured account.
 IDS is list of achievement ids to resolve."
@@ -135,14 +153,12 @@ IDS is list of achievement ids to resolve."
                                  (not (memq item cached-ids)))
                                ids)))
     (if uncached
-        (let ((url (concat (alist-get 'account-achievements orrient-api--endpoints)
-                           "?ids="
-                           (string-join (mapcar #'prin1-to-string '(3522)) ","))))
-          (orrient-api--request url
-                                #'orrient-api--account-achievements:handler
-                                nil
-                                t
-                                (lambda (&rest args) (message "args: %s" args))))
+        (orrient-api--request 'account-achievements
+          :query (list (append '("ids") uncached))
+          :callback (lambda (response)
+                      (orrient-api--account-achievements:handler response
+                                                                 cached
+                                                                 callback)))
       (orrient-api--account-achievements:handler nil
                                                  cached
                                                  callback))))
@@ -164,8 +180,10 @@ IDS is list of achievement ids to resolve."
                      :repeated (gethash "repeated" achievement)
                      :unlocked (gethash "unlocked" achievement))))
         (orrient-cache--insert-account-achievement struct (decode-time))))
-    (when callback
-      (funcall callback (append fetched cached)))))
+    (let ((combined (append fetched cached)))
+      (if callback
+          (funcall callback combined)
+        combined))))
 
 
 ;; Items
@@ -185,10 +203,8 @@ IDS is list of item ids to resolve."
                             "?ids="
                             (string-join (mapcar #'prin1-to-string uncached) ","))))
           (orrient-api--request url
-                                #'orrient-api--handler-items
-                                cached
-                                nil
-                                callback))
+                                :handler #'orrient-api--handler-items
+                                :callback callback))
       (orrient-api--handler-items nil
                                          cached
                                          callback))))

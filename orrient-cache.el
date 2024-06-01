@@ -78,7 +78,6 @@ TIMESTAMP is `decoded-time' struct of the time the ACHIEVEMENT was requested."
   "Return all the achievements with the list of id's in IDS."
   (seq-map
    (lambda (result)
-     (message "result: %S" result)
      (orrient-achievement
       :id (pop result)
       :name (pop result)
@@ -151,14 +150,13 @@ TIMESTAMP is `decoded-time' struct of the time the ITEM was requested."
 
 (defun orrient-cache--get-item (id)
   "Return the item with ID."
-  (when-let ((result (orrient-cache--get-item (list id))))
+  (when-let ((result (orrient-cache--get-items (list id))))
     (pop result)))
 
 (defun orrient-cache--get-items (&optional ids)
   "Return all the items with IDS."
   (seq-map
    (lambda (result)
-     (message "result: %S" result)
      (orrient-item
       :id (pop result)
       :name (pop result)
@@ -179,21 +177,6 @@ TIMESTAMP is `decoded-time' struct of the time the ITEM was requested."
                             id
                             "TRUE")))
   (sqlite-commit (orrient-cache--db)))
-
-
-(emacsql-show-sql
- (emacsql-compile (orrient-cache--db)
-                  [ :insert :or :replace :into items
-                    :values [$s1
-                             [:select name :from items :where (= id $s1)]
-                             $s2]]
-                  1
-                  2))
-
-(emacsql (orrient-cache--db)
-                 [ :insert :or :replace :into items
-                   :values [$s1 ya $s2]]
-                 1 2)
 
 
 ;; Dailies

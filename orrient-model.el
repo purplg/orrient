@@ -19,10 +19,11 @@
   "A single achievement.")
 
 (defclass orrient-achievement-bit ()
-  ((id :initarg :id
-       :type number)
-   (type :initarg :type
+  ((type :initarg :type
          :type string)
+   (id :initarg :id
+       :initform nil
+       :type (or null number))
    (text :initarg :text
          :initform nil
          :type (or null string)))
