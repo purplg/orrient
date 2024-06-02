@@ -95,6 +95,9 @@ that should be used to construct a new object instance.")
 This method should return a sequential list of fields to be inserted
 respective to the columns in the database.")
 
+(cl-defgeneric orrient-cache-to-db-error (id)
+  "")
+
 ;; * Achievements
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-achievement)) result)
   (orrient-achievement
@@ -117,6 +120,9 @@ respective to the columns in the database.")
                         (text (slot-value bit :text)))
                     `(:id ,id :type ,type :text, text)))
                 (slot-value obj :bits))))
+
+(cl-defmethod orrient-cache-to-db-error ((class (subclass orrient-achievement)) id)
+  (orrient-achievement :id id :name (format "Unknown achievement #%d" id)))
 
 ;; * Account Achievements
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-account-achievement)) result)
@@ -148,6 +154,9 @@ respective to the columns in the database.")
   (list (slot-value obj :id)
         (slot-value obj :name)))
 
+(cl-defmethod orrient-cache-to-db-error ((class (subclass orrient-item)) id)
+  (orrient-item :id id :name (format "Unknown item #%d" id)))
+
 ;; * Skins
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-skin)) result)
   (orrient-skin
@@ -157,6 +166,9 @@ respective to the columns in the database.")
 (cl-defmethod orrient-cache-to-db ((obj orrient-skin))
   (list (slot-value obj :id)
         (slot-value obj :name)))
+
+(cl-defmethod orrient-cache-to-db-error ((class (subclass orrient-skin)) id)
+  (orrient-skin :id id :name (format "Unknown skin #%d" id)))
 
 ;; * Dailies
 

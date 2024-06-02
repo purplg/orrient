@@ -74,6 +74,10 @@ be cached."
             :else (lambda (err)
                     (let* ((response (plz-error-response err))
                            (code (plz-response-status response)))
+                      (dolist (item missed)
+                        ;; Insert placeholder error types to cache to
+                        ;; stop requests for unknown items.
+                        (orrient-cache--insert (orrient-cache-to-db-error class item)))
                       (message "error: %s" code))))
           ;; Want to return nil to indicate some items weren't cached
           ;; and are being fetched.
