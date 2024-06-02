@@ -94,11 +94,13 @@ INTERACTIVE is set only when this command is called interactively."
   (interactive "p")
   (orrient--display-buffer
    (orrient-objectives--with-buffer
-    (let ((inhibit-read-only t))
+    (let ((inhibit-read-only t)
+          (pos (point)))
       (erase-buffer)
       (orrient-objectives-mode)
       (dolist (objective orrient-objectives-achievements)
-        (orrient-objectives--render-objective objective))))
+        (orrient-objectives--render-objective objective))
+      (goto-char pos)))
    (not interactive)))
 
 (define-derived-mode orrient-objectives-mode orrient-mode "GW2 Objectives"
