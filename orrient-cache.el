@@ -73,7 +73,7 @@
                 :where (in id $v2)]
               table ids))))
 
-(cl-defmethod orrient-cache--insert ((obj orrient-api) &rest achievements)
+(cl-defmethod orrient-cache--insert ((obj orrient-api))
   (let ((table (intern (string-remove-prefix "orrient-" (symbol-name (eieio-object-class obj)))))
         (values (thread-last (orrient-cache-to-db obj)
                              (apply #'vector))))
