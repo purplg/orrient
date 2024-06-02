@@ -10,13 +10,19 @@
 ;; Achievements
 (defclass orrient-achievement-bit (orrient-api)
   ((type :initarg :type
-         :type string)
+         :type string
+         :documentation
+         "The type of bit. Can be Text, Item, Minipet, or Skin.")
    (id :initarg :id
        :initform nil
-       :type (or null number))
+       :type (or null number)
+       :documentation
+       "The ID of the item, mini, or skin, if applicable.")
    (text :initarg :text
          :initform nil
-         :type (or null string)))
+         :type (or null string)
+         :documentation
+         "The text for the bit, if type is Text."))
   "A bit in an achievement.")
 
 (defclass orrient-achievement (orrient-api)
