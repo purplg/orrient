@@ -133,7 +133,7 @@ respective to the columns in the database.")
       :max (pop result)
       :done (if (= (pop result) 1) t nil)
       :repeated (pop result)
-      :unlocked (pop result)))
+      :unlocked (if (= (pop result) 1) t nil)))
 
 (cl-defmethod orrient-cache-to-db ((obj orrient-account-achievement))
   (list (slot-value obj :id)
