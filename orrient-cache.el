@@ -8,6 +8,9 @@
 (defconst orrient-cache--path (expand-file-name "orrient/" user-emacs-directory))
 (defconst orrient-cache--filename "cache.db")
 
+(defcustom orrient-cache-age 1000
+  "")
+
 (defvar orrient-cache--db nil
   "The sqlite database object used for caching.")
 
@@ -31,6 +34,11 @@
 (defun orrient-cache--init ()
   "Initialize the Orrient caching database."
   (interactive)
+  (emacsql (orrient-cache--db)
+           [ :create-table :if-not-exists timestamp
+             ([(id integer)
+               (table text)
+               (timestamp integer)])])
   (emacsql (orrient-cache--db)
            [ :create-table :if-not-exists achievement
              ([(id integer :primary-key)
@@ -69,9 +77,12 @@
      (lambda (result)
        (orrient-cache-from-db class result))
      (emacsql (orrient-cache--db)
-              [ :select * :from $i1
-                :where (in id $v2)]
-              table ids))))
+           [ :select * :from $i1
+             :where (and (in id $v2)
+                         (in id [ :select [id] :from timestamp
+                                  :where (and (= table $s1)
+                                              (< (- $s3 timestamp) $s4))]))]
+           table ids (time-convert nil 'integer) orrient-cache-age))))
 
 (cl-defmethod orrient-cache--insert ((obj orrient-api))
   (let ((table (intern (string-remove-prefix "orrient-" (symbol-name (eieio-object-class obj)))))
@@ -81,7 +92,12 @@
              [ :insert :or :replace
                :into $i1
                :values ($v2)]
-             table values)))
+             table values)
+    (emacsql orrient-cache--db
+             [ :insert :or :replace
+               :into timestamp
+               :values ([$s1 $s2 $s3])]
+             (slot-value obj :id) table (time-convert nil 'integer))))
 
 (cl-defgeneric orrient-cache-from-db (result)
   "Implement for EIEIO objects that can be fetched from the database

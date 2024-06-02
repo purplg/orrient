@@ -4,11 +4,13 @@
 (require 'eieio)
 
 (defclass orrient-api ()
+  ((id :initarg :id
+       :type number))
   ""
   :abstract t)
 
 ;; Achievements
-(defclass orrient-achievement-bit (orrient-api)
+(defclass orrient-achievement-bit ()
   ((type :initarg :type
          :type string
          :documentation
@@ -26,9 +28,7 @@
   "A bit in an achievement.")
 
 (defclass orrient-achievement (orrient-api)
-  ((id :initarg :id
-       :type number)
-   (name :initarg :name
+  ((name :initarg :name
          :type string)
    (bits :initarg :bits
          :initform '()
@@ -37,11 +37,7 @@
 
 ;; Account Achievements
 (defclass orrient-account-achievement (orrient-api)
-  ((id :type number
-       :initarg :id
-       :documentation
-       "The achievement id.")
-   (bits :type (list-of number)
+  ((bits :type (list-of number)
          :initarg :bits
          :documentation
          "This attribute contains an array of numbers, giving more specific information on the progress for the achievement. The meaning of each value varies with each achievement. Bits start at zero. If an achievement is done, the in-progress bits are not displayed.")
@@ -70,11 +66,7 @@
 
 ;; Items
 (defclass orrient-item (orrient-api)
-  ((id :type number
-       :initarg :id
-       :documentation
-       "The item id.")
-   (name :type string
+  ((name :type string
          :initarg :name
          :documentation
          "The item name."))
@@ -84,11 +76,7 @@ Usually used for achievement rewards.")
 
 ;; Skins
 (defclass orrient-skin (orrient-api)
-  ((id :type number
-       :initarg :id
-       :documentation
-       "The skin id.")
-   (name :type string
+  ((name :type string
          :initarg :name
          :documentation
          "The name of the skin."))
