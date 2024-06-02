@@ -40,6 +40,7 @@ BODY is evaluated in an orrient buffer."
            (achievement (car achievement)))
       (progn
         (insert (propertize (slot-value achievement :name) 'face 'info-title-1))
+        (insert (format " [%d]" (slot-value achievement :id)))
         (if-let* ((achievement-bits (slot-value achievement :bits))
                   (account-achievement (orrient-api--request orrient-account-achievement (list achievement-id)))
                   (account-achievement (car account-achievement))
