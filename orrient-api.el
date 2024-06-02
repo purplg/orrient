@@ -34,6 +34,8 @@
 (defun orrient-api--endpoint-response-type (endpoint)
   (plist-get (alist-get endpoint orrient-api--endpoints) :response))
 
+(cl-defgeneric orrient-api--request (ids &optional callback))
+
 (cl-defmethod orrient-api--request ((class (subclass orrient-api)) ids &optional callback)
   "Retrieve GW2 API data.
 If all IDS are found in the cache then they will immediately be returned.
