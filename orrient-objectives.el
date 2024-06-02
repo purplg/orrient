@@ -72,7 +72,7 @@ BODY is evaluated in an orrient buffer."
                 (setq i (1+ i)))))
         (insert ?\n ?\n))
     (orrient-api--request orrient-achievement (list achievement-id))
-    (insert (propertize (format "Achievement id #%s Loading..." achievement-id) 'face 'info-title-1))))
+    (insert (propertize (format "Achievement id #%s Loading...\n\n" achievement-id) 'face 'info-title-1))))
 
 ;;;###autoload
 (defun orrient-objectives-track ()
