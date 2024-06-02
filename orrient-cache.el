@@ -37,7 +37,7 @@
                (name text)
                (bits object)])])
   (emacsql (orrient-cache--db)
-           [ :create-table :if-not-exists account-achievements
+           [ :create-table :if-not-exists account-achievement
              ([(id integer :primary-key)
                (bits object)
                (current integer)
