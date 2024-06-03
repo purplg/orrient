@@ -15,6 +15,7 @@
 (require 'notifications)
 
 (require 'orrient)
+(require 'orrient-event)
 (require 'orrient-schedule)
 
 (defcustom orrient-timers-skip-step 5
