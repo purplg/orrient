@@ -27,9 +27,6 @@ BODY is evaluated in an orrient buffer."
 (defvar orrient-objectives-achievements nil
   "Achievements being tracked by the objective tracker.")
 
-(defun orrient-objectives-add-achievement (achievement-id)
-  (add-to-list 'orrient-objectives-achievements achievement-id))
-
 (defun orrient-objectives-add-item-amount (item-id quantity)
   ;; TODO
   )
@@ -83,9 +80,25 @@ BODY is evaluated in an orrient buffer."
                         (cons (slot-value achievement :name)
                               achievement))
                       (orrient-cache--get-all orrient-achievement)))
-         (achievement (assoc (completing-read "Achievement: " candidates)
-                           candidates)))
-    (orrient-objectives-add-achievement (slot-value (cdr achievement) :id))))
+         (achievement (assoc (completing-read "Track Achievement: " candidates)
+                             candidates)))
+    (add-to-list 'orrient-objectives-achievements (slot-value (cdr achievement) :id))))
+
+(defun orrient-objectives-untrack (achievement-id)
+  ""
+  (interactive
+   (let* ((candidates (seq-map
+                       (lambda (achievement-id)
+                         (cons (slot-value
+                                (car (orrient-cache--get orrient-achievement (list achievement-id) t))
+                                :name)
+                               achievement-id))
+                       orrient-objectives-achievements))
+          (selection (completing-read "Untrack Achievement: " candidates)))
+     (list (cdr (assoc selection candidates)))))
+  (setq orrient-objectives-achievements
+        (remove achievement-id orrient-objectives-achievements)))
+
 
 ;;;###autoload
 (defun orrient-objectives-open (&optional interactive)

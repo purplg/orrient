@@ -71,19 +71,24 @@
               [ :select * :from $i1]
               table))))
 
-(cl-defmethod orrient-cache--get ((class (subclass orrient-api)) ids)
+(cl-defmethod orrient-cache--get ((class (subclass orrient-api)) ids &optional ignore-timeout)
   (let ((table (intern (string-remove-prefix "orrient-" (symbol-name class))))
         (ids (apply #'vector ids)))
     (seq-map
      (lambda (result)
        (orrient-cache-from-db class result))
-     (emacsql (orrient-cache--db)
-           [ :select * :from $i1
-             :where (and (in id $v2)
-                         (in id [ :select [id] :from timestamp
-                                  :where (and (= table $s1)
-                                              (< (- $s3 timestamp) $s4))]))]
-           table ids (time-convert nil 'integer) orrient-cache-age))))
+     (if ignore-timeout
+         (emacsql (orrient-cache--db)
+                  [ :select * :from $i1
+                    :where (in id $v2)]
+                  table ids (time-convert nil 'integer) orrient-cache-age)
+       (emacsql (orrient-cache--db)
+                  [ :select * :from $i1
+                    :where (and (in id $v2)
+                                (in id [ :select [id] :from timestamp
+                                         :where (and (= table $s1)
+                                                     (< (- $s3 timestamp) $s4))]))]
+                  table ids (time-convert nil 'integer) orrient-cache-age)))))
 
 (cl-defmethod orrient-cache--insert ((obj orrient-api))
   (let ((table (intern (string-remove-prefix "orrient-" (symbol-name (eieio-object-class obj)))))
