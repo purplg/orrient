@@ -2,7 +2,6 @@
 (require 'cl-lib)
 
 (require 'orrient-schedule)
-(require 'orrient-timers)
 
 (defvar orrient-event--buffer-suffix-format "event: %s")
 

@@ -95,6 +95,7 @@ be cached."
 (cl-defmethod orrient-api--from-response ((obj (subclass orrient-achievement)) json)
   (orrient-achievement
    :id (gethash "id" json)
+   :name (gethash "name" json)
    :bits (thread-last (gethash "bits" json)
                       (seq-filter (lambda (bit) (gethash "type" bit)))
                       (mapcar (lambda (bit)
@@ -102,7 +103,11 @@ be cached."
                                  :id (gethash "id" bit)
                                  :type (gethash "type" bit)
                                  :text (gethash "text" bit)))))
-   :name (gethash "name" json)))
+   :tiers (thread-last (gethash "tiers" json)
+                       (mapcar (lambda (tier)
+                                 (orrient-achievement-tier
+                                  :count (gethash "count" tier)
+                                  :points (gethash "points" tier)))))))
 
 (cl-defmethod orrient-api--from-response ((obj (subclass orrient-account-achievement)) json)
   (orrient-account-achievement

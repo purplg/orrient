@@ -43,7 +43,8 @@
            [ :create-table :if-not-exists achievement
              ([(id integer :primary-key)
                (name text)
-               (bits object)])])
+               (bits object)
+               (tiers object)])])
   (emacsql (orrient-cache--db)
            [ :create-table :if-not-exists account-achievement
              ([(id integer :primary-key)
@@ -117,15 +118,21 @@ respective to the columns in the database.")
 ;; * Achievements
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-achievement)) result)
   (orrient-achievement
-      :id (pop result)
-      :name (pop result)
-      :bits (mapcar
-             (lambda (bit)
-               (orrient-achievement-bit
-                :id (plist-get bit :id)
-                :type (plist-get bit :type)
-                :text (plist-get bit :text)))
-             (pop result))))
+   :id (pop result)
+   :name (pop result)
+   :bits (mapcar
+          (lambda (bit)
+            (orrient-achievement-bit
+             :id (plist-get bit :id)
+             :type (plist-get bit :type)
+             :text (plist-get bit :text)))
+          (pop result))
+   :tiers (mapcar
+           (lambda (tier)
+             (orrient-achievement-tier
+              :count (plist-get tier :count)
+              :points (plist-get tier :points)))
+           (pop result))))
 
 (cl-defmethod orrient-cache-to-db ((obj orrient-achievement))
   (list (slot-value obj :id)
@@ -135,7 +142,12 @@ respective to the columns in the database.")
                         (type (slot-value bit :type))
                         (text (slot-value bit :text)))
                     `(:id ,id :type ,type :text, text)))
-                (slot-value obj :bits))))
+                (slot-value obj :bits))
+        (mapcar (lambda (tier)
+                  (let ((count (slot-value tier :count))
+                        (points (slot-value tier :points)))
+                    `(:count ,count :points ,points)))
+                (slot-value obj :tiers))))
 
 (cl-defmethod orrient-cache-to-db-error ((class (subclass orrient-achievement)) id)
   (orrient-achievement :id id :name (format "Unknown achievement #%d" id)))

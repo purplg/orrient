@@ -27,12 +27,28 @@
          "The text for the bit, if type is Text."))
   "A bit in an achievement.")
 
+(defclass orrient-achievement-tier ()
+  ((count :initarg :count
+          :type number
+          :documentation
+          "The number of \"things\" (achievement-specific) that must be
+         completed to achieve this tier.")
+   (points :initarg :points
+           :type number
+           :documentation
+           "The amount of AP awarded for completing this tier.
+         completed to achieve this tier."))
+  "Describes the achievement's tiers.")
+
 (defclass orrient-achievement (orrient-api)
   ((name :initarg :name
          :type string)
    (bits :initarg :bits
          :initform '()
-         :type (list-of orrient-achievement-bit)))
+         :type (list-of orrient-achievement-bit))
+   (tiers :initarg :tiers
+         :initform '()
+         :type (list-of orrient-achievement-tier)))
   "A single achievement.")
 
 ;; Account Achievements
