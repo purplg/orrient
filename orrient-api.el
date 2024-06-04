@@ -25,6 +25,16 @@
                                          :requires-auth nil
                                          :response orrient-skin)))
 
+(defvar orrient-api--pending '()
+  "Requests that are currently pending and shouldn't be queried again.
+
+An alist endpoint types and the ID's.
+
+For example:
+
+  `((achievement 1 2 3)
+   (item 1 2))'")
+
 (defun orrient-api--endpoint (endpoint)
   (plist-get (alist-get endpoint orrient-api--endpoints) :path))
 
@@ -46,9 +56,13 @@ response, cached and uncached.
 All API requests will be cached to the database so future calls will
 be cached."
   (let* ((cached (orrient-cache--get class ids))
-         (cached-ids (seq-map (lambda (struct) (slot-value struct :id)) cached))
-         (missed (seq-filter (lambda (item) (not (memq item cached-ids))) ids)))
-    (if missed
+         (cached-ids (seq-map (lambda (struct) (slot-value struct :id)) cached)))
+    (if-let ((missed (seq-filter (lambda (id)
+                                   (and
+                                    ;; Don't send a request for any items that are cached
+                                    (not (memq id cached-ids))
+                                    ;; Don't send a request for any items we're waiting for a response for.
+                                    (not (memq id (alist-get class orrient-api--pending))))) ids)))
         (let* ((endpoint (intern (string-remove-prefix "orrient-" (symbol-name class))))
                (path (orrient-api--endpoint endpoint))
                (url (concat orrient-api--url
@@ -56,6 +70,8 @@ be cached."
                             "?ids="
                             (string-join (mapcar #'number-to-string missed) ","))))
           (message "url: %s" url)
+          (dolist (id ids)
+            (push id (alist-get class orrient-api--pending)))
           (plz 'get url
             :as 'response
             :headers (when (orrient-api--endpoint-auth-p endpoint)
@@ -69,24 +85,41 @@ be cached."
                                               (orrient-api--from-response class item))
                                             fetched)))
                       (dolist (item fetched)
-                        (orrient-cache--insert item))
+                        (orrient-cache--insert item)
+                        ;; Now that it's cached, we can remove from --pending
+                        (setf (alist-get class orrient-api--pending)
+                              (remq (slot-value item :id) (alist-get class orrient-api--pending))))
                       (when callback
                         (let ((combined (append fetched cached)))
                           (funcall callback combined)))))
             :else (lambda (err)
                     (let* ((response (plz-error-response err))
                            (code (plz-response-status response)))
-                      (dolist (item missed)
-                        ;; Insert placeholder error types to cache to
-                        ;; stop requests for unknown items.
-                        (orrient-cache--insert (orrient-cache-to-db-error class item)))
+                      ;; The GW2 API doesn't seem to contain all
+                      ;; information so some items may be missing.
+                      ;; In this case, or in any case a request
+                      ;; fails, we'll insert placeholder error types
+                      ;; to cache to stop requests for unknown
+                      ;; items.
+                      ;; TODO BUG: This will mark ALL requested items
+                      ;;           as an error if ANY contain an error.
+                      ;;           I don't really know how to work
+                      ;;           around this easily, but it's
+                      ;;           usually fine since, currently,
+                      ;;           requests aren't often group'd
+                      ;;           together like they should be,
+                      (dolist (id missed)
+                        (orrient-cache--insert (orrient-cache-to-db-error class id))
+                        ;; Now that it's cached, we can remove from --pending
+                        (setf (alist-get class orrient-api--pending)
+                              (remq id (alist-get class orrient-api--pending))))
                       (message "error: %s" code))))
           ;; Want to return nil to indicate some items weren't cached
           ;; and are being fetched.
-          nil)
-      (when callback
-        (funcall callback cached))
-      cached)))
+          nil))
+    (when callback
+      (funcall callback cached))
+    cached))
 
 (cl-defgeneric orrient-api--from-response (response))
 
