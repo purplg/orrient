@@ -8,6 +8,9 @@
 (defconst orrient-cache--path (expand-file-name "orrient/" user-emacs-directory))
 (defconst orrient-cache--filename "cache.db")
 
+(defvar orrient-cache--shortest-refresh-time nil
+  "The shortest refresh time recorded so far.")
+
 (defvar orrient-cache--db nil
   "The sqlite database object used for caching.")
 
@@ -78,14 +81,21 @@
          (emacsql (orrient-cache--db)
                   [ :select * :from $i1
                     :where (in id $v2)]
-                  table ids (time-convert nil 'integer) (orrient-cache-time class))
+                  table ids)
        (emacsql (orrient-cache--db)
-                  [ :select * :from $i1
-                    :where (and (in id $v2)
-                                (in id [ :select [id] :from timestamp
-                                         :where (and (= table $s1)
-                                                     (< (- $s3 timestamp) $s4))]))]
-                  table ids (time-convert nil 'integer) (orrient-cache-time class))))))
+                [ :select * :from $i1
+                  :where (and (in id $v2)
+                              (in id [ :select [id] :from timestamp
+                                       :where (and (= table $s1)
+                                                   (< (- $s3 timestamp) $s4))]))]
+                table
+                ids
+                (time-convert nil 'integer)
+                (let ((cache-time (orrient-cache-time class)))
+                  (when (or (not orrient-cache--shortest-refresh-time)
+                            (< cache-time orrient-cache--shortest-refresh-time))
+                    (setq orrient-cache--shortest-refresh-time cache-time))
+                  cache-time))))))
 
 (cl-defmethod orrient-cache--insert ((obj orrient-api))
   (let ((table (intern (string-remove-prefix "orrient-" (symbol-name (eieio-object-class obj)))))

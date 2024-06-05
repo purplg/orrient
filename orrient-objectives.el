@@ -18,6 +18,11 @@
 (defvar orrient-objectives-buffer-suffix "objectives"
   "Suffix used for naming `orrient-objectives' buffers.")
 
+(defvar orrient-objectives-refresh-timer nil
+  "Timer to refresh timer. Used with
+  `orrient-cache--shortest-refresh-time' to update when the most
+  frequently expired item on the page needs to be updated..")
+
 (defmacro orrient-objectives--with-buffer (&rest body)
   "Like `with-current-buffer' but with an `orrient-' buffer namespace.
 BODY is evaluated in an orrient buffer."
@@ -131,9 +136,16 @@ INTERACTIVE is set only when this command is called interactively."
           (pos (point)))
       (erase-buffer)
       (orrient-objectives-mode)
+      (when orrient-objectives-refresh-timer
+        (cancel-timer orrient-objectives-refresh-timer)
+        (setq orrient-objectives-refresh-timer nil))
       (dolist (objective orrient-objectives-achievements)
         (orrient-objectives--render-objective objective))
-      (goto-char pos)))
+      (goto-char pos)
+      (setq orrient-objectives-refresh-timer
+            (run-with-timer orrient-cache--shortest-refresh-time
+                            nil
+                            #'orrient-objectives-open))))
    (not interactive)))
 
 (define-derived-mode orrient-objectives-mode orrient-mode "GW2 Objectives"
