@@ -33,40 +33,52 @@ BODY is evaluated in an orrient buffer."
 
 (defun orrient-objectives--render-objective (achievement-id)
   "Write the tracked objectives in the current buffer."
-  (if-let ((achievement (orrient-cache--get orrient-achievement (list achievement-id)))
+  (if-let ((achievement (orrient-api--request
+                          orrient-achievement
+                          (list achievement-id)
+                          (lambda (&rest _) (orrient-objectives-open))))
            (achievement (car achievement)))
       (progn
         (insert (propertize (slot-value achievement :name) 'face 'info-title-1))
         (insert (format " [%d]" (slot-value achievement :id)))
-        (if-let* ((achievement-bits (slot-value achievement :bits))
-                  (account-achievement (orrient-api--request orrient-account-achievement (list achievement-id)))
-                  (account-achievement (car account-achievement))
-                  (account-bits (slot-value account-achievement :bits)))
-            (let ((i 0))
-              (dolist (bit (slot-value achievement :bits))
-                (insert
-                 (pcase (slot-value bit :type)
-                   ("Item" (format "\n  - [%s] item | %s"
-                                   (if (memq i account-bits) "x" " ")
-                                   (if-let ((bit (nth i achievement-bits))
-                                            (item-id (slot-value bit :id))
-                                            (item (orrient-cache--get orrient-item (list item-id)))
-                                            (item (car item)))
-                                       (slot-value item :name)
-                                     (orrient-api--request orrient-item (list item-id) #'pg/nothing)
-                                     (format "Loading item %d..." item-id))))
-                   ("Text" (format "\ntext: %s" (slot-value bit :text)))
-                   ("Skin" (format "\n  - [%s] skin | %s"
-                                   (if (memq i account-bits) "x" " ")
-                                   (if-let ((bit (nth i achievement-bits))
-                                            (skin-id (slot-value bit :id))
-                                            (skin (orrient-cache--get orrient-skin (list skin-id)))
-                                            (skin (car skin)))
-                                       (slot-value skin :name)
-                                     (orrient-api--request orrient-skin (list skin-id) #'pg/nothing)
-                                     (format "Loading skin %d..." skin-id))))
-                   (_ "\nError")))
-                (setq i (1+ i)))))
+        (when-let* ((achievement-bits (slot-value achievement :bits))
+                    (account-achievement (orrient-api--request orrient-account-achievement
+                                           (list achievement-id)
+                                           (lambda (&rest _) (orrient-objectives-open))))
+                    (account-achievement (car account-achievement))
+                    (account-bits (slot-value account-achievement :bits)))
+          (let ((i 0))
+            (dolist (bit (slot-value achievement :bits))
+              (insert
+               (pcase (slot-value bit :type)
+                 ("Item" (format "\n  - [%s] item | %s"
+                                 (if (memq i account-bits) "x" " ")
+                                 (if-let ((bit (nth i achievement-bits))
+                                          (item-id (slot-value bit :id))
+                                          (item (orrient-cache--get orrient-item (list item-id)))
+                                          (item (car item)))
+                                     (slot-value item :name)
+                                   (orrient-api--request
+                                     orrient-item
+                                     (list item-id)
+                                     (lambda (&rest _) (orrient-objectives-open)))
+                                   (format "Loading item %d..." item-id))))
+                 ("Text" (format "\ntext: %s" (slot-value bit :text)))
+                 ("Skin" (format "\n  - [%s] skin | %s"
+                                 (if (memq i account-bits) "x" " ")
+                                 (if-let ((bit (nth i achievement-bits))
+                                          (skin-id (slot-value bit :id))
+                                          (skin (orrient-cache--get orrient-skin (list skin-id)))
+                                          (skin (car skin)))
+                                     (slot-value skin :name)
+                                   (orrient-api--request
+                                     orrient-skin
+                                     (list skin-id)
+                                     (lambda (&rest _)
+                                       (orrient-objectives-open)))
+                                   (format "Loading skin %d..." skin-id))))
+                 (_ "\nError")))
+              (setq i (1+ i)))))
         (insert ?\n ?\n))
     (orrient-api--request orrient-achievement (list achievement-id))
     (insert (propertize (format "Achievement id #%s Loading...\n\n" achievement-id) 'face 'info-title-1))))

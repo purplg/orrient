@@ -48,7 +48,8 @@ For example:
 
 (cl-defmethod orrient-api--request ((class (subclass orrient-api)) ids &optional callback)
   "Retrieve GW2 API data.
-If all IDS are found in the cache then they will immediately be returned.
+If all IDS are found in the cache then they will immediately be
+returned and CALLBACK is not called.
 
 Otherwise, the CALLBACK (if provided) will be called with the combined
 response, cached and uncached.
@@ -109,7 +110,8 @@ be cached."
                       ;;           requests aren't often group'd
                       ;;           together like they should be,
                       (dolist (id missed)
-                        (orrient-cache--insert (orrient-cache-to-db-error class id))
+                        (when-let ((error-data (orrient-cache-to-db-error class id)))
+                          (orrient-cache--insert error-data))
                         ;; Now that it's cached, we can remove from --pending
                         (setf (alist-get class orrient-api--pending)
                               (remq id (alist-get class orrient-api--pending))))
@@ -117,8 +119,6 @@ be cached."
           ;; Want to return nil to indicate some items weren't cached
           ;; and are being fetched.
           nil))
-    (when callback
-      (funcall callback cached))
     cached))
 
 (cl-defgeneric orrient-api--from-response (response))

@@ -177,6 +177,9 @@ respective to the columns in the database.")
         (slot-value obj :repeated)
         (if (slot-value obj :unlocked) 1 0)))
 
+(cl-defmethod orrient-cache-to-db-error ((class (subclass orrient-account-achievement)) id)
+  nil)
+
 ;; * Items
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-item)) result)
   (orrient-item
