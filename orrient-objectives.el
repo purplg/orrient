@@ -123,7 +123,8 @@ BODY is evaluated in an orrient buffer."
                       (orrient-cache--get-all orrient-achievement)))
          (achievement (assoc (completing-read "Track Achievement: " candidates)
                              candidates)))
-    (add-to-list 'orrient-objectives-achievements (slot-value (cdr achievement) :id))))
+    (add-to-list 'orrient-objectives-achievements (slot-value (cdr achievement) :id))
+    (orrient-objectives-open)))
 
 (defun orrient-objectives-untrack (achievement-id)
   ""
@@ -138,7 +139,8 @@ BODY is evaluated in an orrient buffer."
           (selection (completing-read "Untrack Achievement: " candidates)))
      (list (cdr (assoc selection candidates)))))
   (setq orrient-objectives-achievements
-        (remove achievement-id orrient-objectives-achievements)))
+        (remove achievement-id orrient-objectives-achievements))
+  (orrient-objectives-open))
 
 (defun orrient-objectives-refresh ()
   (interactive)
