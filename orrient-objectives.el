@@ -58,7 +58,6 @@ BODY is evaluated in an orrient buffer."
                      (* 100 (/ (float current) (float max)))
                      current max)))
           (when-let* ((achievement-bits (slot-value achievement :bits))
-                      (account-achievement (car account-achievement))
                       (account-bits (slot-value account-achievement :bits)))
             (let ((i 0))
               (dolist (bit (slot-value achievement :bits))
