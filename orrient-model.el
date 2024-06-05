@@ -5,7 +5,10 @@
 
 (defclass orrient-api ()
   ((id :initarg :id
-       :type number))
+       :type number)
+   (cache-age :initarg :cache-age
+              :initform 1000
+              :type number))
   ""
   :abstract t)
 

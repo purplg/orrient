@@ -8,9 +8,6 @@
 (defconst orrient-cache--path (expand-file-name "orrient/" user-emacs-directory))
 (defconst orrient-cache--filename "cache.db")
 
-(defcustom orrient-cache-age 1000
-  "")
-
 (defvar orrient-cache--db nil
   "The sqlite database object used for caching.")
 
@@ -81,14 +78,14 @@
          (emacsql (orrient-cache--db)
                   [ :select * :from $i1
                     :where (in id $v2)]
-                  table ids (time-convert nil 'integer) orrient-cache-age)
+                  table ids (time-convert nil 'integer) (orrient-cache-time class))
        (emacsql (orrient-cache--db)
                   [ :select * :from $i1
                     :where (and (in id $v2)
                                 (in id [ :select [id] :from timestamp
                                          :where (and (= table $s1)
                                                      (< (- $s3 timestamp) $s4))]))]
-                  table ids (time-convert nil 'integer) orrient-cache-age)))))
+                  table ids (time-convert nil 'integer) (orrient-cache-time class))))))
 
 (cl-defmethod orrient-cache--insert ((obj orrient-api))
   (let ((table (intern (string-remove-prefix "orrient-" (symbol-name (eieio-object-class obj)))))
@@ -119,6 +116,15 @@ respective to the columns in the database.")
 
 (cl-defgeneric orrient-cache-to-db-error (id)
   "")
+
+(cl-defgeneric orrient-cache-time ()
+  "")
+
+(cl-defmethod orrient-cache-time ((class (subclass orrient-api)))
+  "By default, items are cached for 1000 seconds period of time. If a type
+needs to be more frequently refresh, override this method and return
+a new value."
+  1000)
 
 ;; * Achievements
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-achievement)) result)
@@ -179,6 +185,10 @@ respective to the columns in the database.")
 
 (cl-defmethod orrient-cache-to-db-error ((class (subclass orrient-account-achievement)) id)
   nil)
+
+(cl-defmethod orrient-cache-time ((class (subclass orrient-account-achievement)))
+  "Account achievements should be refreshed more frequently."
+  60)
 
 ;; * Items
 (cl-defmethod orrient-cache-from-db ((class (subclass orrient-item)) result)
