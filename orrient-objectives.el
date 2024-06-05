@@ -124,7 +124,6 @@ BODY is evaluated in an orrient buffer."
   (setq orrient-objectives-achievements
         (remove achievement-id orrient-objectives-achievements)))
 
-
 ;;;###autoload
 (defun orrient-objectives-open (&optional interactive)
   "Open the event objectives buffer.
