@@ -46,7 +46,9 @@ BODY is evaluated in an orrient buffer."
       (progn
         (insert (propertize (format "%s (%d)"
                                     (slot-value achievement :name)
-                                    (slot-value achievement :id)) 'face 'info-title-1))
+                                    (slot-value achievement :id))
+                            'face
+                            'info-title-1))
         (when-let* ((account-achievement (orrient-api--request orrient-account-achievement
                                           (list achievement-id)
                                           (lambda (&rest _) (orrient-objectives-refresh))))
