@@ -10,7 +10,7 @@
     (define-key map (kbd "q") #'orrient--quit)
     (when (fboundp #'evil-define-key*)
       (evil-define-key* 'normal map
-        (kbd "g r") #'orrient-objectives-open
+        (kbd "g r") #'orrient-objectives-refresh
         (kbd "q") #'orrient--quit))
     map)
   "Keymap for `orrient-objectives-mode'.")
@@ -41,7 +41,7 @@ BODY is evaluated in an orrient buffer."
   (if-let ((achievement (orrient-api--request
                           orrient-achievement
                           (list achievement-id)
-                          (lambda (&rest _) (orrient-objectives-open))))
+                          (lambda (&rest _) (orrient-objectives-refresh))))
            (achievement (car achievement)))
       (progn
         (insert (propertize (format "%s (%d)"
@@ -49,7 +49,7 @@ BODY is evaluated in an orrient buffer."
                                     (slot-value achievement :id)) 'face 'info-title-1))
         (when-let* ((account-achievement (orrient-api--request orrient-account-achievement
                                           (list achievement-id)
-                                          (lambda (&rest _) (orrient-objectives-open))))
+                                          (lambda (&rest _) (orrient-objectives-refresh))))
                     (account-achievement (car account-achievement)))
           (insert
            (let ((current (slot-value account-achievement :current))
@@ -74,7 +74,7 @@ BODY is evaluated in an orrient buffer."
                                      (orrient-api--request
                                        orrient-item
                                        (list item-id)
-                                       (lambda (&rest _) (orrient-objectives-open)))
+                                       (lambda (&rest _) (orrient-objectives-refresh)))
                                      (format "Loading item %d..." item-id))))
                    ("Text" (format "\ntext: %s" (slot-value bit :text)))
                    ("Skin" (format "\n  - [%s] skin | %s"
@@ -88,13 +88,29 @@ BODY is evaluated in an orrient buffer."
                                        orrient-skin
                                        (list skin-id)
                                        (lambda (&rest _)
-                                         (orrient-objectives-open)))
+                                         (orrient-objectives-refresh)))
                                      (format "Loading skin %d..." skin-id))))
                    (_ "\nError")))
                 (setq i (1+ i))))))
         (insert ?\n ?\n))
     (orrient-api--request orrient-achievement (list achievement-id))
     (insert (propertize (format "Achievement id #%s Loading...\n\n" achievement-id) 'face 'info-title-1))))
+
+(defun orrient-objectives--render-buffer ()
+  (let ((inhibit-read-only t)
+        (pos (point)))
+    (erase-buffer)
+    (orrient-objectives-mode)
+    (when orrient-objectives-refresh-timer
+      (cancel-timer orrient-objectives-refresh-timer)
+      (setq orrient-objectives-refresh-timer nil))
+    (dolist (objective orrient-objectives-achievements)
+      (orrient-objectives--render-objective objective))
+    (goto-char pos))
+  (setq orrient-objectives-refresh-timer
+        (run-with-timer orrient-cache--shortest-refresh-time
+                        nil
+                        #'orrient-objectives-refresh)))
 
 ;;;###autoload
 (defun orrient-objectives-track ()
@@ -124,6 +140,11 @@ BODY is evaluated in an orrient buffer."
   (setq orrient-objectives-achievements
         (remove achievement-id orrient-objectives-achievements)))
 
+(defun orrient-objectives-refresh ()
+  (interactive)
+  (orrient-objectives--with-buffer
+   (orrient-objectives--render-buffer)))
+
 ;;;###autoload
 (defun orrient-objectives-open (&optional interactive)
   "Open the event objectives buffer.
@@ -131,20 +152,7 @@ INTERACTIVE is set only when this command is called interactively."
   (interactive "p")
   (orrient--display-buffer
    (orrient-objectives--with-buffer
-    (let ((inhibit-read-only t)
-          (pos (point)))
-      (erase-buffer)
-      (orrient-objectives-mode)
-      (when orrient-objectives-refresh-timer
-        (cancel-timer orrient-objectives-refresh-timer)
-        (setq orrient-objectives-refresh-timer nil))
-      (dolist (objective orrient-objectives-achievements)
-        (orrient-objectives--render-objective objective))
-      (goto-char pos)
-      (setq orrient-objectives-refresh-timer
-            (run-with-timer orrient-cache--shortest-refresh-time
-                            nil
-                            #'orrient-objectives-open))))
+    (orrient-objectives--render-buffer))
    (not interactive)))
 
 (define-derived-mode orrient-objectives-mode orrient-mode "GW2 Objectives"
