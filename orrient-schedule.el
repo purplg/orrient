@@ -51,7 +51,8 @@
     ('living-world-4 "Living World S4")
     ('icebrood-saga "The Icebrood Saga")
     ('end-of-dragons "End of Dragons")
-    ('secrets-of-the-obscure "Secrets of the Obscure")))
+    ('secrets-of-the-obscure "Secrets of the Obscure")
+    ('janthir-wilds "Janthir Wilds")))
 
 (defvar orrient-schedule nil
   "List of meta events.")
@@ -293,6 +294,11 @@
  :category 'secrets-of-the-obscure
  :events
  '(("Convergences"                       :offset ( 1 30) :frequency ( 3  0) :length ( 0 10) :waypoint nil)))
+
+(orrient-schedule--add "Janthir Syntri"
+ :category 'janthir-wilds
+ :events
+ '(("Of Mists and Monsters"              :offset ( 0 30) :frequency ( 2  0) :length ( 0 25) :waypoint nil)))
 
 (provide 'orrient-schedule)
 ;;; orrient-schedule.el ends here

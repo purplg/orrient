@@ -298,6 +298,11 @@ EVENT is an orrient-event cl-struct of the event that's starting."
   "Face for meta heading in the event timers buffer."
   :group 'orrient)
 
+(defface orrient-timers-category-janthir-wilds
+  '((t (:background "#142c6c" :extend t :inherit 'orrient-timers-category)))
+  "Face for meta heading in the event timers buffer."
+  :group 'orrient)
+
 (defun orrient-timers--get-category-face (category)
   "Convert the CATEGORY symbol into a face."
   (pcase category
@@ -310,7 +315,8 @@ EVENT is an orrient-event cl-struct of the event that's starting."
     ('living-world-4 'orrient-timers-category-living-world-4)
     ('icebrood-saga 'orrient-timers-category-icebrood-saga)
     ('end-of-dragons 'orrient-timers-category-end-of-dragons)
-    ('secrets-of-the-obscure 'orrient-timers-category-secrets-of-the-obscure)))
+    ('secrets-of-the-obscure 'orrient-timers-category-secrets-of-the-obscure)
+    ('janthir-wilds 'orrient-timers-category-janthir-wilds)))
 
 ;;; Countdown
 (defface orrient-timers-countdown-now
