@@ -11,8 +11,9 @@
 (defmacro orrient-event--with-buffer (event &rest body)
   "Like `with-current-buffer' but with `orrient-event-buffer'.
 BODY is evaluated with `orrient-event-buffer'"
+  (declare (indent defun))
   `(orrient--with-buffer (orrient-event--buffer-name ,event)
-                        ,@body))
+                         ,@body))
 
 (defvar orrient-event-mode-map
   (let ((map (make-sparse-keymap)))
@@ -29,14 +30,14 @@ BODY is evaluated with `orrient-event-buffer'"
 EVENT is a `orrient-event' struct that is to be rendered."
   (interactive
    (let ((completions (mapcar (lambda (event)
-                                 (cons (orrient-event-name event) event))
-                               (flatten-list (mapcar #'orrient-meta-events orrient-schedule)))))
+                                (cons (orrient-event-name event) event))
+                              (flatten-list (mapcar #'orrient-meta-events orrient-schedule)))))
      (list (cdr (assoc (completing-read "Event: " completions) completions)))))
   (orrient--display-buffer
    (orrient-event--with-buffer event
-                               (let ((inhibit-read-only t))
-                                 (orrient-event--render event (orrient-timers--current-time)))
-                               (orrient-event-mode))))
+     (let ((inhibit-read-only t))
+       (orrient-event--render event (orrient-timers--current-time)))
+     (orrient-event-mode))))
 
 (defun orrient-event--format-eta (minutes)
   "Format an ETA shown on an event of its next occurance."
@@ -46,8 +47,8 @@ EVENT is a `orrient-event' struct that is to be rendered."
     ;; hours and "2h 00m" is 6 characters. So we normalize all timestamps to 6
     ;; characters.
     (format " %s " (if (> hours 0)
-	              (format "%dh %02dm" hours minutes)
-                    (format "%02dm" minutes)))))
+	               (format "%dh %02dm" hours minutes)
+                     (format "%02dm" minutes)))))
 
 (defun orrient-event--render-event (instance time)
   (let* ((event-start (- (orrient-event-instance-start instance) time))
