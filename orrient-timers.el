@@ -32,6 +32,10 @@ forward in time by calling `orrient-timers-forward' will snap to
   :group 'orreint
   :type 'boolean)
 
+(defcustom orrient-timers-soon-time 15
+  "How many minutes until an event is considered to be starting
+  'soon'.")
+
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'widget-button-press)
@@ -349,7 +353,7 @@ EVENT is an orrient-event cl-struct of the event that's starting."
 (defun orrient-timers--get-event-instance-face (event-instance minutes)
   "Return the face used when MINUTES remain."
   (cond ((<= minutes 0) 'orrient-timers-countdown-now)
-        ((< minutes 15) (if (member event-instance orrient-timers--notify-events)
+        ((< minutes orrient-timers-soon-time) (if (member event-instance orrient-timers--notify-events)
                             'orrient-timers-countdown-soon-watched
                           'orrient-timers-countdown-soon))
         (t (if (member event-instance orrient-timers--notify-events)
@@ -359,7 +363,7 @@ EVENT is an orrient-event cl-struct of the event that's starting."
 (defun orrient-timers--get-countdown-face (minutes)
   "Return the face used when MINUTES remain."
   (cond ((<= minutes 0) 'orrient-timers-countdown-now)
-        ((< minutes 15) 'orrient-timers-countdown-soon)
+        ((< minutes orrient-timers-soon-time) 'orrient-timers-countdown-soon)
         (t 'orrient-timers-countdown-later)))
 
 
@@ -498,7 +502,7 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
 
     ;; Notify when watched event is approaching.
     (when (member event-instance orrient-timers--notify-events)
-      (cond ((= 15 minutes-until)
+      (cond ((= orrient-timers-soon-time minutes-until)
              (orrient-timers--notify-event-soon event))
             ((>= 0 minutes-until)
              (orrient-timers--notify-event-started event)
