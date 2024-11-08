@@ -122,19 +122,10 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
   (orrient-timers--timer-cancel)
   (orrient-timers--update time))
 
-(defun orrient-timers--waypoint-copy (event)
-  "Copy the waypoint of EVENT into clipboard.
-EVENT is an orrient-event cl-struct"
-  (if-let ((waypoint (orrient-event-waypoint event)))
-      (progn
-        (kill-new waypoint)
-        (message "orrient: Copied %s to clipboard" waypoint))
-    (message "orrient: This event has no waypoint")))
-
 (defun orrient-timers-copy-waypoint (point)
   "Copy the waypoint of event at POINT to clipboard."
   (interactive "d")
-  (orrient-timers--waypoint-copy
+  (orrient--waypoint-copy
    (thread-first point
                  (button-at)
                  (button-get 'orrient-event-instance)

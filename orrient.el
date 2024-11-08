@@ -68,6 +68,15 @@ BODY is evaluated with buffer."
   (setq orrient--buffer-list
         (seq-filter #'buffer-live-p orrient--buffer-list)))
 
+(defun orrient--waypoint-copy (event)
+  "Copy the waypoint of EVENT into clipboard.
+EVENT is an orrient-event cl-struct"
+  (if-let ((waypoint (orrient-event-waypoint event)))
+      (progn
+        (kill-new waypoint)
+        (message "orrient: Copied %s to clipboard" waypoint))
+    (message "orrient: This event has no waypoint")))
+
 (define-derived-mode orrient-mode special-mode "GW2 Info"
   "View Guild Wars 2 Information."
   :group 'orrient

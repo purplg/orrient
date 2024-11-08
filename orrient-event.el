@@ -20,9 +20,13 @@ BODY is evaluated with `orrient-event-buffer'"
     (define-key map (kbd "q") #'orrient--quit)
     (when (fboundp #'evil-define-key*)
       (evil-define-key* 'normal map
-        (kbd "q") #'orrient--quit))
+        (kbd "q") #'orrient--quit
+        (kbd "y") #'orrient-event-copy-waypoint))
     map)
   "Keymap for `orrient-event-mode'.")
+
+(defvar-local orrient-event nil
+  "The event associated with the current buffer.")
 
 ;;;###autoload
 (defun orrient-event-open (event)
@@ -35,9 +39,9 @@ EVENT is a `orrient-event' struct that is to be rendered."
      (list (cdr (assoc (completing-read "Event: " completions) completions)))))
   (orrient--display-buffer
    (orrient-event--with-buffer event
-     (let ((inhibit-read-only t))
-       (orrient-event--render event (orrient-timers--current-time)))
-     (orrient-event-mode))))
+     (orrient-event-mode)
+     (setq orrient-event event)
+     (orrient-event--render orrient-event (orrient-timers--current-time)))))
 
 (defun orrient-event--format-eta (minutes)
   "Format an ETA shown on an event of its next occurance."
@@ -88,6 +92,11 @@ EVENT is a `orrient-event' struct that is to be rendered."
                                              time)))
   (insert ?|)
   (goto-char (point-min)))
+
+(defun orrient-event-copy-waypoint ()
+  "Copy the waypoint of the current event buffers' event to clipboard."
+  (interactive)
+  (orrient--waypoint-copy orrient-event))
 
 (define-derived-mode orrient-event-mode orrient-mode "GW2 Event"
   "View Guild Wars 2 Event."
