@@ -21,7 +21,10 @@ BODY is evaluated with `orrient-event-buffer'"
     (when (fboundp #'evil-define-key*)
       (evil-define-key* 'normal map
         (kbd "q") #'orrient--quit
-        (kbd "y") #'orrient-event-copy-waypoint))
+        (kbd "y") #'orrient-event-copy-waypoint
+        (when (fboundp #'evil-define-key*)
+          (evil-define-key* 'normal map
+            (kbd "gr") #'orrient-event-revert))))
     map)
   "Keymap for `orrient-event-mode'.")
 
@@ -42,6 +45,14 @@ EVENT is a `orrient-event' struct that is to be rendered."
      (orrient-event-mode)
      (setq orrient-event event)
      (orrient-event--render orrient-event (orrient-schedule--current-time)))))
+
+(defun orrient-event-revert ()
+  (interactive)
+  (let ((inhibit-read-only t)
+        (pos (point)))
+    (orrient-event--render orrient-event (orrient-schedule--current-time))
+    (goto-char pos)
+    (message "orrient: Refreshed buffer")))
 
 (defun orrient-event--format-eta (minutes)
   "Format an ETA shown on an event of its next occurance."
