@@ -57,6 +57,62 @@
 (defvar orrient-schedule nil
   "List of meta events.")
 
+(defcustom orrient-schedule-soon-time 15
+  "How many minutes until an event is considered to be starting
+  'soon'.")
+
+;;; Countdown
+(defface orrient-schedule-countdown-now
+  '((t (:inherit error)))
+  "Orrient face for time remaining when an event is happening now."
+  :group 'orrient)
+
+(defface orrient-schedule-countdown-soon
+  '((t (:inherit warning)))
+  "Orrient face for time remaining when an event is happening soon."
+  :group 'orrient)
+
+(defface orrient-schedule-countdown-later
+  '((t ()))
+  "Orrient face for time remaining when an event is not happening soon."
+  :group 'orrient)
+
+(defface orrient-schedule-countdown-soon-watched
+  '((t (:inverse-video t
+        :inherit 'orrient-schedule-countdown-soon)))
+  "Orrient face for time remaining when an event is happening soon."
+  :group 'orrient)
+
+(defface orrient-schedule-countdown-later-watched
+  '((t (:inverse-video t
+        :inherit orrient-schedule-countdown-later)))
+  "Orrient face for time remaining when an event is not happening soon."
+  :group 'orrient)
+
+(defun orrient-schedule--get-countdown-face (minutes)
+  "Return the face used when MINUTES remain."
+  (cond ((<= minutes 0) 'orrient-schedule-countdown-now)
+        ((< minutes orrient-schedule-soon-time) 'orrient-schedule-countdown-soon)
+        (t 'orrient-schedule-countdown-later)))
+
+(defun orrient-schedule--current-time ()
+  "Return current time in minutes from UTC 0."
+  (let ((time (decode-time nil t nil)))
+    (+ (* 60 (decoded-time-hour time))
+       (decoded-time-minute time))))
+
+(defun orrient-schedule--format-eta (minutes)
+  "Format an ETA shown on an event of its next occurance.
+MINUTES is the number of minutes to format into a human-readable timestamp."
+  (let ((hours (/ minutes 60))
+        (minutes (% minutes 60)))
+    ;; 6 is select here because the longest possible time between events is 2
+    ;; hours and "2h 00m" is 6 characters. So we normalize all timestamps to 6
+    ;; characters.
+    (format "%6s" (if (> hours 0)
+	              (format "%dh %02dm" hours minutes)
+                    (format "%02dm" minutes)))))
+
 (defmacro orrient-schedule--add (&rest args)
   (declare (indent defun))
   `(push

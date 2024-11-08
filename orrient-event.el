@@ -41,7 +41,7 @@ EVENT is a `orrient-event' struct that is to be rendered."
    (orrient-event--with-buffer event
      (orrient-event-mode)
      (setq orrient-event event)
-     (orrient-event--render orrient-event (orrient-timers--current-time)))))
+     (orrient-event--render orrient-event (orrient-schedule--current-time)))))
 
 (defun orrient-event--format-eta (minutes)
   "Format an ETA shown on an event of its next occurance."
@@ -63,19 +63,19 @@ EVENT is a `orrient-event' struct that is to be rendered."
           (set-text-properties (point)
                                (progn (insert (orrient-event--format-eta event-start))
                                       (point))
-                               `(face (,(orrient-timers--get-countdown-face event-start))))
+                               `(face (,(orrient-schedule--get-countdown-face event-start))))
           ;; Event end time
           (insert ?-)
           (set-text-properties (point)
                                (progn (insert (orrient-event--format-eta event-end))
                                       (point))
-                               `(face (,(orrient-timers--get-countdown-face event-end)))))
+                               `(face (,(orrient-schedule--get-countdown-face event-end)))))
 
       (insert "| starts")
       (set-text-properties (point)
                            (progn (insert (orrient-event--format-eta event-end))
                                   (point))
-                           `(face (,(orrient-timers--get-countdown-face event-end)))))))
+                           `(face (,(orrient-schedule--get-countdown-face event-end)))))))
 
 (defun orrient-event--render (event time)
   (erase-buffer)

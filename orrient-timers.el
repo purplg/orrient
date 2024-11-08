@@ -16,6 +16,7 @@
 
 (require 'orrient)
 (require 'orrient-event)
+(require 'orrient-meta)
 (require 'orrient-schedule)
 
 (defcustom orrient-timers-skip-step 5
@@ -31,10 +32,6 @@ forward in time by calling `orrient-timers-forward' will snap to
 01:15."
   :group 'orreint
   :type 'boolean)
-
-(defcustom orrient-timers-soon-time 15
-  "How many minutes until an event is considered to be starting
-  'soon'.")
 
 (defvar orrient-timers-mode-map
   (let ((map (make-sparse-keymap)))
@@ -110,7 +107,7 @@ Specify STEP to forward by that amount instead."
   "Jump to the current system time."
   (interactive)
   (orrient-timers--timer-start)
-  (orrient-timers--update (orrient-timers--current-time)))
+  (orrient-timers--update (orrient-schedule--current-time)))
 
 (defun orrient-timers-goto (time)
   "Jump to a specified time.
@@ -194,7 +191,7 @@ If non-nil, then a `run-with-timer' timer is active.")
                         60
                         (lambda ()
                           (orrient-timers--with-buffer
-                           (orrient-timers--update (orrient-timers--current-time)))))))
+                           (orrient-timers--update (orrient-schedule--current-time)))))))
 
 (defun orrient-timers--timer-cancel ()
   "Stop the live update timer if it's running."
@@ -209,12 +206,6 @@ If non-nil, then a `run-with-timer' timer is active.")
     (orrient-timers--timer-start))
   (save-excursion
     (orrient-timers--render-buffer)))
-
-(defun orrient-timers--current-time ()
-  "Return current time in minutes from UTC 0."
-  (let ((time (decode-time nil t nil)))
-    (+ (* 60 (decoded-time-hour time))
-       (decoded-time-minute time))))
 
 (defun orrient-timers--notify-event-started (event)
   "Send a notification for an event has started.
@@ -313,49 +304,15 @@ EVENT is an orrient-event cl-struct of the event that's starting."
     ('secrets-of-the-obscure 'orrient-timers-category-secrets-of-the-obscure)
     ('janthir-wilds 'orrient-timers-category-janthir-wilds)))
 
-;;; Countdown
-(defface orrient-timers-countdown-now
-  '((t (:inherit error)))
-  "Orrient face for time remaining when an event is happening now."
-  :group 'orrient)
-
-(defface orrient-timers-countdown-soon
-  '((t (:inherit warning)))
-  "Orrient face for time remaining when an event is happening soon."
-  :group 'orrient)
-
-(defface orrient-timers-countdown-later
-  '((t ()))
-  "Orrient face for time remaining when an event is not happening soon."
-  :group 'orrient)
-
-(defface orrient-timers-countdown-soon-watched
-  '((t (:inverse-video t
-        :inherit 'orrient-timers-countdown-soon)))
-  "Orrient face for time remaining when an event is happening soon."
-  :group 'orrient)
-
-(defface orrient-timers-countdown-later-watched
-  '((t (:inverse-video t
-        :inherit orrient-timers-countdown-later)))
-  "Orrient face for time remaining when an event is not happening soon."
-  :group 'orrient)
-
 (defun orrient-timers--get-event-instance-face (event-instance minutes)
   "Return the face used when MINUTES remain."
-  (cond ((<= minutes 0) 'orrient-timers-countdown-now)
-        ((< minutes orrient-timers-soon-time) (if (member event-instance orrient-timers--notify-events)
-                            'orrient-timers-countdown-soon-watched
-                          'orrient-timers-countdown-soon))
+  (cond ((<= minutes 0) 'orrient-schedule-countdown-now)
+        ((< minutes orrient-schedule-soon-time) (if (member event-instance orrient-timers--notify-events)
+                            'orrient-schedule-countdown-soon-watched
+                          'orrient-schedule-countdown-soon))
         (t (if (member event-instance orrient-timers--notify-events)
-               'orrient-timers-countdown-later-watched
-             'orrient-timers-countdown-later))))
-
-(defun orrient-timers--get-countdown-face (minutes)
-  "Return the face used when MINUTES remain."
-  (cond ((<= minutes 0) 'orrient-timers-countdown-now)
-        ((< minutes orrient-timers-soon-time) 'orrient-timers-countdown-soon)
-        (t 'orrient-timers-countdown-later)))
+               'orrient-schedule-countdown-later-watched
+             'orrient-schedule-countdown-later))))
 
 
 ;; Callbacks
@@ -442,19 +399,7 @@ TIME in minutes from UTC 0."
 (defun orrient-timers--time ()
   "Return the current time being rendered."
   (or orrient-timers-time
-      (orrient-timers--current-time)))
-
-(defun orrient-timers--format-eta (minutes)
-  "Format an ETA shown on an event of its next occurance.
-MINUTES is the number of minutes to format into a human-readable timestamp."
-  (let ((hours (/ minutes 60))
-        (minutes (% minutes 60)))
-    ;; 6 is select here because the longest possible time between events is 2
-    ;; hours and "2h 00m" is 6 characters. So we normalize all timestamps to 6
-    ;; characters.
-    (format "%6s" (if (> hours 0)
-	              (format "%dh %02dm" hours minutes)
-                    (format "%02dm" minutes)))))
+      (orrient-schedule--current-time)))
 
 (defun orrient-timers--format-event (event-name minutes-until)
   "Format an event of its next occurance.
@@ -462,7 +407,7 @@ EVENT-NAME is the name of event to format.
 
 MINUTES-UNTIL is the number of minutes until the event starts."
   (format "%s %s"
-          (orrient-timers--format-eta minutes-until)
+          (orrient-schedule--format-eta minutes-until)
           event-name))
 
 (defun orrient-timers--heading-length ()
@@ -489,11 +434,11 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
   (let* ((event (orrient-event-instance-event event-instance))
          (event-name (orrient-event-name event))
          (minutes-until (- (orrient-event-instance-start event-instance)
-                           (orrient-timers--current-time))))
+                           (orrient-schedule--current-time))))
 
     ;; Notify when watched event is approaching.
     (when (member event-instance orrient-timers--notify-events)
-      (cond ((= orrient-timers-soon-time minutes-until)
+      (cond ((= orrient-schedule-soon-time minutes-until)
              (orrient-timers--notify-event-soon event))
             ((>= 0 minutes-until)
              (orrient-timers--notify-event-started event)

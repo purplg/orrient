@@ -2,7 +2,6 @@
 (require 'cl-lib)
 
 (require 'orrient-schedule)
-(require 'orrient-timers)
 
 (defvar orrient-meta--buffer-suffix-format "meta: %s")
 
@@ -37,7 +36,7 @@ META is a `orrient-meta' struct that is to be rendered."
   (orrient--display-buffer
    (orrient-meta--with-buffer meta
                               (let ((inhibit-read-only t))
-                                (orrient-meta--render meta (orrient-timers--current-time)))
+                                (orrient-meta--render meta (orrient-schedule--current-time)))
                               (orrient-meta-mode))))
 
 (defun orrient-meta--render-event (instance time)
@@ -60,17 +59,17 @@ TIME is the amount of minutes offset from UTC 0."
     (insert ?\n)
     (insert (format "%9s: " (if (< event-start 0) "started" "starts in")))
     (set-text-properties (point)
-                         (progn (insert (orrient-timers--format-eta event-start))
+                         (progn (insert (orrient-schedule--format-eta event-start))
                                 (point))
-                         `(face (,(orrient-timers--get-countdown-face event-start))))
+                         `(face (,(orrient-schedule--get-countdown-face event-start))))
 
     ;; Event end time
     (insert ?\n)
     (insert (format "%9s: " "ends in"))
     (set-text-properties (point)
-                         (progn (insert (orrient-timers--format-eta (abs event-end)))
+                         (progn (insert (orrient-schedule--format-eta (abs event-end)))
                                 (point))
-                         `(face (,(orrient-timers--get-countdown-face event-end))))))
+                         `(face (,(orrient-schedule--get-countdown-face event-end))))))
 
 (defun orrient-meta--render (meta time)
   "Render a meta in current buffer.
