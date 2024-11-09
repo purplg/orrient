@@ -101,17 +101,24 @@
     (+ (* 60 (decoded-time-hour time))
        (decoded-time-minute time))))
 
-(defun orrient-schedule--format-eta (minutes)
+(defun orrient-schedule--format-eta (minutes &optional short)
   "Format an ETA shown on an event of its next occurance.
-MINUTES is the number of minutes to format into a human-readable timestamp."
-  (let ((hours (/ minutes 60))
-        (minutes (% minutes 60)))
-    ;; 6 is select here because the longest possible time between events is 2
-    ;; hours and "2h 00m" is 6 characters. So we normalize all timestamps to 6
-    ;; characters.
-    (format "%6s" (if (> hours 0)
-	              (format "%dh %02dm" hours minutes)
-                    (format "%02dm" minutes)))))
+When SHORT is non-nil, use the shorted version of the time format
+by inserting a minus '-' sign before the formatted time and omitting
+the 'ago' at the end.
+
+For example, say an event started 10 minutes ago. When SHORT is
+non-nil, it'll be formatted as '-10m'. When SHORT is nil, it'll be
+formatted as '10m ago'."
+  (let ((past (< minutes 0))
+        (hours (abs (/ minutes 60)))
+        (minutes (abs (% minutes 60))))
+    (concat
+     (when (and past short) "-")
+     (when (> hours 0)
+       (format "%sh " hours))
+     (format "%02dm" minutes)
+     (when (and past (not short)) " ago"))))
 
 (defmacro orrient-schedule--add (&rest args)
   (declare (indent defun))

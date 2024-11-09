@@ -31,6 +31,16 @@ BODY is evaluated with `orrient-event-buffer'"
 (defvar-local orrient-event nil
   "The event associated with the current buffer.")
 
+(defface orrient-event-title
+  '((t (:height 180 :inherit success)))
+  "Face for the event name at the top of an event buffer."
+  :group 'orrient)
+
+(defface orrient-event-instance-label
+  '((t (:height 140 :inherit info-title-2)))
+  "Face for a the start time of single event instance."
+  :group 'orrient)
+
 ;;;###autoload
 (defun orrient-event-open (event)
   "Open a GW2 event buffer.
@@ -54,54 +64,56 @@ EVENT is a `orrient-event' struct that is to be rendered."
     (goto-char pos)
     (message "orrient: Refreshed buffer")))
 
-(defun orrient-event--format-eta (minutes)
-  "Format an ETA shown on an event of its next occurance."
-  (let ((hours (/ minutes 60))
-        (minutes (% minutes 60)))
-    ;; 6 is select here because the longest possible time between events is 2
-    ;; hours and "2h 00m" is 6 characters. So we normalize all timestamps to 6
-    ;; characters.
-    (format " %s " (if (> hours 0)
-	               (format "%dh %02dm" hours minutes)
-                     (format "%02dm" minutes)))))
-
 (defun orrient-event--render-event (instance time)
   (let* ((event-start (- (orrient-event-instance-start instance) time))
          (event-end (- (orrient-event-instance-end instance) time)))
-    (if (< event-start time)
+    (set-text-properties
+     (point)
+     (progn
+       (insert ?\n
+               (format "%s" (let* ((time (+ (orrient-schedule--current-time) event-start))
+                                   (hours (/ time 60))
+                                   (minutes (% time 60)))
+                              (format-time-string "%H:%M"
+                                                  (encode-time 0 minutes hours 0 0 0))))
+               ?\n)
+       (point))
+     '(face orrient-event-instance-label))
+    (if (< event-start 0)
         (progn
-          (insert "| started")
+          (insert "Started: ")
           (set-text-properties (point)
-                               (progn (insert (orrient-event--format-eta event-start))
+                               (progn (insert (orrient-schedule--format-eta event-start t))
                                       (point))
                                `(face (,(orrient-schedule--get-countdown-face event-start))))
-          ;; Event end time
-          (insert ?-)
+          (insert ?\n)
+          (insert "Ends in: ")
+          (message "event-end: %s" event-end)
           (set-text-properties (point)
-                               (progn (insert (orrient-event--format-eta event-end))
+                               (progn (insert (orrient-schedule--format-eta event-end))
                                       (point))
                                `(face (,(orrient-schedule--get-countdown-face event-end)))))
 
-      (insert "| starts")
+      (insert "Starts in: ")
       (set-text-properties (point)
-                           (progn (insert (orrient-event--format-eta event-end))
+                           (progn (insert (orrient-schedule--format-eta event-start))
                                   (point))
-                           `(face (,(orrient-schedule--get-countdown-face event-end)))))))
+                           `(face (,(orrient-schedule--get-countdown-face event-end)))))
+    (insert ?\n)))
 
 (defun orrient-event--render (event time)
   (erase-buffer)
-  (insert (propertize (orrient-event-name event) 'face 'info-title-1))
+  (insert (propertize (orrient-event-name event) 'face 'orrient-event-title))
   (insert ?\n ?\n)
   (set-text-properties (point)
                        (progn (insert "Upcoming")
                               (point))
-                       `(face info-title-3))
+                       `(face org-level-1))
   (insert ?\n)
   (let ((iter (orrient-timers--event-iter event time)))
     (cl-loop repeat 5
              do (orrient-event--render-event (iter-next iter)
                                              time)))
-  (insert ?|)
   (goto-char (point-min)))
 
 (defun orrient-event-copy-waypoint ()

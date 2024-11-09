@@ -59,7 +59,7 @@ TIME is the amount of minutes offset from UTC 0."
     (insert ?\n)
     (insert (format "%9s: " (if (< event-start 0) "started" "starts in")))
     (set-text-properties (point)
-                         (progn (insert (orrient-schedule--format-eta event-start))
+                         (progn (insert (orrient-schedule--format-eta event-start t))
                                 (point))
                          `(face (,(orrient-schedule--get-countdown-face event-start))))
 
@@ -67,7 +67,7 @@ TIME is the amount of minutes offset from UTC 0."
     (insert ?\n)
     (insert (format "%9s: " "ends in"))
     (set-text-properties (point)
-                         (progn (insert (orrient-schedule--format-eta (abs event-end)))
+                         (progn (insert (orrient-schedule--format-eta event-end t))
                                 (point))
                          `(face (,(orrient-schedule--get-countdown-face event-end))))))
 

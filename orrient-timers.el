@@ -205,7 +205,7 @@ If non-nil, then a `run-with-timer' timer is active.")
       (orrient-timers--timer-cancel)
     (orrient-timers--timer-start))
   (save-excursion
-    (orrient-timers--render-buffer)))
+    (orrient-timers--update)))
 
 (defun orrient-timers--notify-event-started (event)
   "Send a notification for an event has started.
@@ -407,7 +407,7 @@ EVENT-NAME is the name of event to format.
 
 MINUTES-UNTIL is the number of minutes until the event starts."
   (format "%s %s"
-          (orrient-schedule--format-eta minutes-until)
+          (orrient-schedule--format-eta minutes-until t)
           event-name))
 
 (defun orrient-timers--heading-length ()
