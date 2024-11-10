@@ -307,10 +307,10 @@ formatted as '10m ago'."
 (orrient-schedule--add "Cantha: Day and Night"
   :category 'end-of-dragons
   :events
-  '(("Dawn"                              :offset ( 0 25) :frequency ( 2  0) :length ( 0  5) :waypoint nil)
-    ("Day"                               :offset ( 0 30) :frequency ( 2  0) :length ( 1 10) :waypoint nil)
-    ("Dusk"                              :offset ( 1 40) :frequency ( 2  0) :length ( 0  5) :waypoint nil)
-    ("Night"                             :offset ( 1 45) :frequency ( 2  0) :length ( 0 40) :waypoint nil)))
+  '(("Dawn"                              :offset ( 0 35) :frequency ( 2  0) :length ( 0  5) :waypoint nil)
+    ("Day"                               :offset ( 0 40) :frequency ( 2  0) :length ( 0 55) :waypoint nil)
+    ("Dusk"                              :offset ( 1 35) :frequency ( 2  0) :length ( 0  5) :waypoint nil)
+    ("Night"                             :offset ( 1 40) :frequency ( 2  0) :length ( 0 55) :waypoint nil)))
 
 (orrient-schedule--add "Seitung Province"
  :category 'end-of-dragons
