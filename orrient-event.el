@@ -105,6 +105,10 @@ EVENT is a `orrient-event' struct that is to be rendered."
   (erase-buffer)
   (insert (propertize (orrient-event-name event) 'face 'orrient-event-title))
   (insert ?\n ?\n)
+  (when (orrient-event-waypoint event)
+    (insert-button "[Copy waypoint]"
+                   'action (lambda (_) (orrient--waypoint-copy orrient-event)))
+    (insert ?\n ?\n))
   (set-text-properties (point)
                        (progn (insert "Upcoming")
                               (point))
