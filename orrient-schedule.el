@@ -363,5 +363,10 @@ formatted as '10m ago'."
  :events
  '(("Of Mists and Monsters"              :offset ( 0 30) :frequency ( 2  0) :length ( 0 25) :waypoint nil)))
 
+(orrient-schedule--add "Mount Balrior"
+ :category 'janthir-wilds
+ :events
+ '(("Mount Balrior"                      :offset ( 0  0) :frequency ( 3  0) :length ( 0 10) :waypoint nil)))
+
 (provide 'orrient-schedule)
 ;;; orrient-schedule.el ends here
