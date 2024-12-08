@@ -59,9 +59,6 @@ forward in time by calling `orrient-timers-forward' will snap to
 (defvar orrient-timers-buffer-suffix "timers"
   "Suffix used for naming `orrient-timer' buffers.")
 
-(defvar orrient-timers--notify-events nil
-  "List of events to be notified when they start.")
-
 (defvar-local orrient-timers-time nil
   "The current time rendered in the table.")
 
@@ -134,15 +131,7 @@ TIME is in ISO 8601 format as specified by `parse-time-string'"
   (let ((event-instance (thread-first point
                                   (button-at)
                                   (button-get 'orrient-event-instance))))
-    (if (member event-instance orrient-timers--notify-events)
-        (progn
-          (setq orrient-timers--notify-events
-                (remove event-instance orrient-timers--notify-events))
-          (message "orrient: Disabled notification when %s starts"
-                   (orrient-event-name (orrient-event-instance-event event-instance))))
-      (add-to-list 'orrient-timers--notify-events event-instance)
-      (message "orrient: Enabled notification when %s starts"
-               (orrient-event-name (orrient-event-instance-event event-instance))))
+    (orrient-event-watch event-instance)
     (orrient-timers--update orrient-timers-time)))
 
 ;;;###autoload
@@ -307,10 +296,10 @@ EVENT is an orrient-event cl-struct of the event that's starting."
 (defun orrient-timers--get-event-instance-face (event-instance minutes)
   "Return the face used when MINUTES remain."
   (cond ((<= minutes 0) 'orrient-schedule-countdown-now)
-        ((< minutes orrient-schedule-soon-time) (if (member event-instance orrient-timers--notify-events)
+        ((< minutes orrient-schedule-soon-time) (if (member event-instance orrient-event--watch)
                             'orrient-schedule-countdown-soon-watched
                           'orrient-schedule-countdown-soon))
-        (t (if (member event-instance orrient-timers--notify-events)
+        (t (if (member event-instance orrient-event--watch)
                'orrient-schedule-countdown-later-watched
              'orrient-schedule-countdown-later))))
 
@@ -437,13 +426,13 @@ TIME is used to calculate the eta for EVENT-INSTANCE."
                            (orrient-schedule--current-time))))
 
     ;; Notify when watched event is approaching.
-    (when (member event-instance orrient-timers--notify-events)
+    (when (member event-instance orrient-event--watch)
       (cond ((= orrient-schedule-soon-time minutes-until)
              (orrient-timers--notify-event-soon event))
             ((>= 0 minutes-until)
              (orrient-timers--notify-event-started event)
-             (setq orrient-timers--notify-events
-                   (remove event-instance orrient-timers--notify-events)))
+             (setq orrient-event--watch
+                   (remove event-instance orrient-event--watch)))
             (t nil)))
 
     (cons (orrient-timers--format-event (orrient-event-name (orrient-event-instance-event event-instance))

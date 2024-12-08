@@ -31,6 +31,9 @@ BODY is evaluated with `orrient-event-buffer'"
 (defvar-local orrient-event nil
   "The event associated with the current buffer.")
 
+(defvar orrient-event--watch nil
+  "List of events to be notified when they start.")
+
 (defface orrient-event-title
   '((t (:height 180 :inherit success)))
   "Face for the event name at the top of an event buffer."
@@ -40,6 +43,19 @@ BODY is evaluated with `orrient-event-buffer'"
   '((t (:height 140 :inherit info-title-2)))
   "Face for a the start time of single event instance."
   :group 'orrient)
+
+(defun orrient-event-watch (event-instance)
+  "Watch an event-instance to send a notification when it is
+starting."
+  (if (member event-instance orrient-event--watch)
+      (progn
+        (setq orrient-event--watch
+              (remove event-instance orrient-event--watch))
+        (message "orrient: Disabled notification when %s starts"
+                 (orrient-event-name (orrient-event-instance-event event-instance))))
+    (add-to-list 'orrient-event--watch event-instance)
+    (message "orrient: Enabled notification when %s starts"
+             (orrient-event-name (orrient-event-instance-event event-instance))))) 
 
 ;;;###autoload
 (defun orrient-event-open (event)
@@ -61,8 +77,7 @@ EVENT is a `orrient-event' struct that is to be rendered."
   (let ((inhibit-read-only t)
         (pos (point)))
     (orrient-event--render orrient-event (orrient-schedule--current-time))
-    (goto-char pos)
-    (message "orrient: Refreshed buffer")))
+    (goto-char pos)))
 
 (defun orrient-event--render-event (instance time)
   (let* ((event-start (- (orrient-event-instance-start instance) time))
@@ -108,7 +123,13 @@ EVENT is a `orrient-event' struct that is to be rendered."
   (when (orrient-event-waypoint event)
     (insert-button "[Copy waypoint]"
                    'action (lambda (_) (orrient--waypoint-copy orrient-event)))
-    (insert ?\n ?\n))
+    (insert " "))
+  (let ((event-instance (iter-next (orrient-timers--event-iter event time))))
+    (insert-button (if (member event-instance orrient-event--watch) "[Watch]" "[Unwatch]")
+                   'action (lambda (_)
+                             (orrient-event-watch event-instance)
+                             (orrient-event-revert))))
+  (insert ?\n ?\n)
   (set-text-properties (point)
                        (progn (insert "Upcoming")
                               (point))
